@@ -1,4 +1,4 @@
-package br.unibh.sdm;
+package br.unibh.sdm.unimusic_music;
 
 import static org.junit.Assert.assertTrue;
 
