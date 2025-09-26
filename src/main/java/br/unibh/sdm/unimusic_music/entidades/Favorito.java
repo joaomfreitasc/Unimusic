@@ -1,22 +1,30 @@
 package br.unibh.sdm.unimusic_music.entidades;
 
-public class Favorite {
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
+
+@DynamoDBTable(tableName = "ZFAVORITO")
+public class Favorito {
     private String userId;
     private String musicId;
 
-    public Favorite() {
+    public Favorito() {
     }
-    public Favorite(String userId, String musicId) {
+    public Favorito(String userId, String musicId) {
         this.userId = userId;
         this.musicId = musicId;
     }
 
+    @DynamoDBHashKey
     public String getUserId() {
         return userId;
     }
     public void setUserId(String userId) {
         this.userId = userId;
     }
+
+    @DynamoDBHashKey
     public String getMusicId() {
         return musicId;
     }
@@ -39,7 +47,7 @@ public class Favorite {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        Favorite other = (Favorite) obj;
+        Favorito other = (Favorito) obj;
         if (userId == null) {
             if (other.userId != null)
                 return false;
@@ -55,6 +63,6 @@ public class Favorite {
     
     @Override
     public String toString() {
-        return "Favorite [userId=" + userId + ", musicId=" + musicId + "]";
+        return "Favorito [userId=" + userId + ", musicId=" + musicId + "]";
     }
 }

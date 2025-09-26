@@ -14,35 +14,35 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.unibh.sdm.unimusic_music.entidades.Music;
-import br.unibh.sdm.unimusic_music.negocio.MusicService;
+import br.unibh.sdm.unimusic_music.entidades.Musica;
+import br.unibh.sdm.unimusic_music.negocio.MusicaService;
 import jakarta.validation.constraints.NotNull;
 
 @RestController
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE, path = "music")
-public class MusicController {
+public class MusicaController {
     
-    private final MusicService musicService;
+    private final MusicaService musicService;
 
-    public MusicController(MusicService musicService) {
+    public MusicaController(MusicaService musicService) {
         this.musicService = musicService;
     }
 
     @GetMapping
-    public List<Music> getMusics(@RequestParam(required = false) String titulo) {
+    public List<Musica> getMusics(@RequestParam(required = false) String titulo) {
         if(titulo != null && !titulo.isEmpty()) {
             return musicService.getMusicByTitulo(titulo);
         }
         return musicService.getAllMusics();
     }
     @GetMapping("/{id}")
-    public Music getMusicById(@PathVariable String id) {
+    public Musica getMusicById(@PathVariable String id) {
         return musicService.getMusicById(id);
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(value="", consumes=MediaType.APPLICATION_JSON_VALUE)
-    public Music createMusic(@RequestBody @NotNull Music music) {
+    public Musica createMusic(@RequestBody @NotNull Musica music) {
         return musicService.createMusic(music);
     }
 

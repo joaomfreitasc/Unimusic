@@ -9,40 +9,40 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import br.unibh.sdm.unimusic_music.persistencia.MusicRepository;
-import br.unibh.sdm.unimusic_music.entidades.Music;
+import br.unibh.sdm.unimusic_music.persistencia.MusicaRepository;
+import br.unibh.sdm.unimusic_music.entidades.Musica;
 import br.unibh.sdm.unimusic_music.exceptions.NotFoundException;
 
 @Service
-public class MusicService {
+public class MusicaService {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(MusicService.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(MusicaService.class);
     
-    private final MusicRepository musicRepository;
+    private final MusicaRepository musicRepository;
 
-    public MusicService(MusicRepository musicRepository) {
+    public MusicaService(MusicaRepository musicRepository) {
         this.musicRepository = musicRepository;
     }
 
-    public List<Music> getAllMusics() {
-        Iterable<Music> allMusics = musicRepository.findAll();
+    public List<Musica> getAllMusics() {
+        Iterable<Musica> allMusics = musicRepository.findAll();
         return StreamSupport.stream(allMusics.spliterator(), false).collect(Collectors.toList());
     }
 
-    public Music getMusicById(String id) {
+    public Musica getMusicById(String id) {
         return musicRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Música com id " + id + " não encontrada."));
     }
 
-    public List<Music> getMusicByTitulo(String titulo) {
-        List<Music> music = musicRepository.findByTitulo(titulo);
+    public List<Musica> getMusicByTitulo(String titulo) {
+        List<Musica> music = musicRepository.findByTitulo(titulo);
         if(!music.isEmpty()) {
             return music;
         }
         throw new NotFoundException("A música com o titulo " + titulo + " não foi encontrada.");
     }
 
-    public Music createMusic(Music music) {
+    public Musica createMusic(Musica music) {
         return musicRepository.save(music);
     }
 

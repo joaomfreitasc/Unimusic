@@ -9,40 +9,40 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import br.unibh.sdm.unimusic_music.persistencia.UserRepository;
-import br.unibh.sdm.unimusic_music.entidades.User;
+import br.unibh.sdm.unimusic_music.persistencia.UsuarioRepository;
+import br.unibh.sdm.unimusic_music.entidades.Usuario;
 import br.unibh.sdm.unimusic_music.exceptions.NotFoundException;
 
 @Service
-public class UserService {
+public class UsuarioService {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(UserService.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(UsuarioService.class);
    
-    private final UserRepository userRepository;
+    private final UsuarioRepository userRepository;
 
-    public UserService(UserRepository userRepository) {
+    public UsuarioService(UsuarioRepository userRepository) {
         this.userRepository = userRepository;
     }
 
-    public List<User> getAllUsers() {
-        Iterable<User> users = userRepository.findAll();;
+    public List<Usuario> getAllUsers() {
+        Iterable<Usuario> users = userRepository.findAll();;
         return StreamSupport.stream(users.spliterator(), false).collect(Collectors.toList());
     }
 
-    public User getUserById(String id) {
+    public Usuario getUserById(String id) {
         return userRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("O usuário com o id " + id + " não foi encontrado."));
     }
 
-    public List<User> getUserByName(String name) {
-        List<User> users = userRepository.findByName(name);
+    public List<Usuario> getUserByName(String name) {
+        List<Usuario> users = userRepository.findByName(name);
         if (!users.isEmpty()) {
             return users;
         }
         throw new NotFoundException("O usuário com o nome " + name + " não foi encontrado.");
     }
 
-    public User createUser(User user) {
+    public Usuario createUser(Usuario user) {
         return userRepository.save(user);
     }
 

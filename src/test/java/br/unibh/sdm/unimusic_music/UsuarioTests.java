@@ -27,18 +27,18 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 
-import br.unibh.sdm.unimusic_music.entidades.User;
-import br.unibh.sdm.unimusic_music.persistencia.UserRepository;
+import br.unibh.sdm.unimusic_music.entidades.Usuario;
+import br.unibh.sdm.unimusic_music.persistencia.UsuarioRepository;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = {PropertyPlaceholderAutoConfiguration.class, UserTests.DynamoDBConfig.class})
+@SpringBootTest(classes = {PropertyPlaceholderAutoConfiguration.class, UsuarioTests.DynamoDBConfig.class})
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class UserTests {
+public class UsuarioTests {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(UserTests.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(UsuarioTests.class);
 
     @Configuration
-	@EnableDynamoDBRepositories(basePackageClasses = UserTests.class)
+	@EnableDynamoDBRepositories(basePackageClasses = UsuarioTests.class)
 	public static class DynamoDBConfig {
 
 		@Value("${amazon.aws.accesskey}")
@@ -64,15 +64,15 @@ public class UserTests {
 	}
 
     @Autowired
-    private UserRepository repository;
+    private UsuarioRepository repository;
     
     @Test
     public void testCreatUser() throws ParseException {
         repository.deleteAll();
         LOGGER.info("Creating user...");
-        User u1 = new User("Gs", "emailGS", "senha1234");
+        Usuario u1 = new Usuario("Gs", "emailGS", "senha1234");
         repository.save(u1);
-        Iterable<User> listaUser = repository.findAll();
+        Iterable<Usuario> listaUser = repository.findAll();
         assertNotNull(listaUser.iterator());
     }
     

@@ -15,22 +15,22 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.unibh.sdm.unimusic_music.entidades.User;
-import br.unibh.sdm.unimusic_music.negocio.UserService;
+import br.unibh.sdm.unimusic_music.entidades.Usuario;
+import br.unibh.sdm.unimusic_music.negocio.UsuarioService;
 import jakarta.validation.constraints.NotNull;
 
 @RestController
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE, path = "user")
-public class UserController {
+public class UsuarioController {
 
-    private final UserService userService;
+    private final UsuarioService userService;
 
-    public UserController(UserService userService) {
+    public UsuarioController(UsuarioService userService) {
         this.userService = userService;
     }
 
     @GetMapping
-    public List<User> getUsers(@RequestParam(required = false) String name) {
+    public List<Usuario> getUsers(@RequestParam(required = false) String name) {
         if(name != null && !name.isEmpty()) {
             return userService.getUserByName(name);
         }
@@ -38,13 +38,13 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public User getUserById(@PathVariable String id) {
+    public Usuario getUserById(@PathVariable String id) {
         return userService.getUserById(id);
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(value="", consumes=MediaType.APPLICATION_JSON_VALUE)
-    public User createUser(@RequestBody @NotNull User user) {
+    public Usuario createUser(@RequestBody @NotNull Usuario user) {
         return userService.createUser(user);
     }
 

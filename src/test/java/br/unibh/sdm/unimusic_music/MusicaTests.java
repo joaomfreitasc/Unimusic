@@ -31,19 +31,19 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 
-import br.unibh.sdm.unimusic_music.entidades.Music;
-import br.unibh.sdm.unimusic_music.persistencia.MusicRepository;
+import br.unibh.sdm.unimusic_music.entidades.Musica;
+import br.unibh.sdm.unimusic_music.persistencia.MusicaRepository;
 
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = {PropertyPlaceholderAutoConfiguration.class, MusicTests.DynamoDBConfig.class})
+@SpringBootTest(classes = {PropertyPlaceholderAutoConfiguration.class, MusicaTests.DynamoDBConfig.class})
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class MusicTests {
+public class MusicaTests {
     
-    private static Logger LOGGER = LoggerFactory.getLogger(MusicTests.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(MusicaTests.class);
 
     @Configuration
-	@EnableDynamoDBRepositories(basePackageClasses = MusicTests.class)
+	@EnableDynamoDBRepositories(basePackageClasses = MusicaTests.class)
 	public static class DynamoDBConfig {
 
 		@Value("${amazon.aws.accesskey}")
@@ -69,25 +69,25 @@ public class MusicTests {
 	}
 
     @Autowired
-    private MusicRepository repository;
+    private MusicaRepository repository;
 
     @Test
     public void testCreatMusic() throws ParseException {
         repository.deleteAll();
         LOGGER.info("Creating Objects...");
-        Music m1 = new Music("Musica1", "Artista1", "Album1", "Genero1", 1, "music1\\com");
-        Music m2 = new Music("Musica2", "Artista2", "Album2", "Genero2", 2, "music2\\com");
-        Music m3 = new Music("Musica3", "Artista3", "Album3", "Genero3", 3, "music3\\com");
-        Music m4 = new Music("Musica4", "Artista4", "Album4", "Genero4", 4, "music4\\com");
-        Music m5 = new Music("Musica5", "Artista5", "Album5", "Genero5", 5, "music5\\com");
+        Musica m1 = new Musica("Musica1", "Artista1", "Album1", "Genero1", 1, "music1\\com");
+        Musica m2 = new Musica("Musica2", "Artista2", "Album2", "Genero2", 2, "music2\\com");
+        Musica m3 = new Musica("Musica3", "Artista3", "Album3", "Genero3", 3, "music3\\com");
+        Musica m4 = new Musica("Musica4", "Artista4", "Album4", "Genero4", 4, "music4\\com");
+        Musica m5 = new Musica("Musica5", "Artista5", "Album5", "Genero5", 5, "music5\\com");
         repository.save(m1);
         repository.save(m2);
         repository.save(m3);
         repository.save(m4);
         repository.save(m5);
-        Iterable<Music> lista = repository.findAll();
+        Iterable<Musica> lista = repository.findAll();
         assertNotNull(lista.iterator());
-        for (Music music : lista) {
+        for (Musica music : lista) {
             LOGGER.info(music.toString());
         }
         LOGGER.info("Searching a object");
@@ -98,8 +98,8 @@ public class MusicTests {
     @Test
     public void testDelete() throws ParseException {
         LOGGER.info("Deleting objects..");
-        List<Music> result = repository.findByTitulo("Musica4");
-        for (Music music : result) {
+        List<Musica> result = repository.findByTitulo("Musica4");
+        for (Musica music : result) {
             LOGGER.info("Deleting Music titulo = " + music.getTitulo());
             repository.delete(music);
         }
