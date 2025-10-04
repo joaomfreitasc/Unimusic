@@ -35,7 +35,7 @@ public class UsuarioService {
     }
 
     public List<Usuario> getUserByName(String name) {
-        List<Usuario> users = userRepository.findByName(name);
+        List<Usuario> users = userRepository.findByNome(name);
         if (!users.isEmpty()) {
             return users;
         }

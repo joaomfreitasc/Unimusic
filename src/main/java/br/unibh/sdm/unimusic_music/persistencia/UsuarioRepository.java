@@ -11,7 +11,7 @@ import br.unibh.sdm.unimusic_music.entidades.Usuario;
 @EnableScan
 public interface UsuarioRepository extends CrudRepository<Usuario, String> {
 
-    List<Usuario> findByName(String name);
+    List<Usuario> findByNome(String name);
     List<Usuario> findByEmail(String email);
 
 }

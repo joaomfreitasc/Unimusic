@@ -7,13 +7,14 @@
 
 
 
+
         {
             "type": "java",
             "name": "App",
             "request": "launch",
             "mainClass": "br.unibh.sdm.unimusic_music.App",
             "projectName": "unimusic-music",
-            "vmArgs": "-Dspring.config.location=C:\\Users\\junii\\projeto_sdm\\backend-unimusic\\"
+           "vmArgs": "-Dspring.config.location=C:\\Users\\gusta\\application.properties"
         },
         {
             "type": "java",
@@ -34,7 +35,7 @@
             "request": "launch",
             "mainClass": "br.unibh.sdm.unimusic_music.App",
             "projectName": "unimusic-music",
-            "vmArgs": "-Dspring.config.location=C:\\Users\\junii\\projeto_sdm\\backend-unimusic\\"
+            "vmArgs": "-Dspring.config.location=C:\\Users\\gusta\\application.properties"
         }
     ]
 }
