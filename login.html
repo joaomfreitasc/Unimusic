@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UniMusic</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,
+      <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231DB954' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'>
+          <path d='M12 2V22M4 15V9M20 15V9M8 18V6M16 18V6'/>
+      </svg>">
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="auth-body">
+  <main class="auth-main">
+    <div class="auth-container">
+      <div class="auth-header">
+        <div class="app-logo">
+          <span class="logo-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 12V20M8 8V20M12 4V20M16 8V20M20 12V20" />
+            </svg>
+          </span>
+          <h1 class="app-title">UniMusic</h1>
+        </div>
+        <button id="dark-mode-toggle" class="icon-button" aria-label="Alternar modo">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+            <path
+              d="M12,22 C17.5228475,22 22,17.5228475 22,12 C22,6.4771525 17.5228475,2 12,2 C6.4771525,2 2,6.4771525 2,12 C2,17.5228475 6.4771525,22 12,22 Z M12,20 L12,4 C16.418278,4 20,7.581722 20,12 C20,16.418278 16.418278,20 12,20 Z">
+            </path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="auth-tabs">
+        <button id="tab-login" class="auth-tab active">Entrar</button>
+        <button id="tab-register" class="auth-tab">Cadastrar</button>
+      </div>
+
+      <form id="login-form" class="auth-form active" onsubmit="event.preventDefault()">
+        <div class="input-group">
+          <label for="login-username">Nome de Usuário</label>
+          <input type="text" id="login-username" required placeholder="Seu nome de usuário" />
+        </div>
+        <div class="input-group">
+          <label for="login-password">Senha</label>
+          <input type="password" id="login-password" required placeholder="Sua senha" />
+        </div>
+        <button type="submit" id="botao-login" class="auth-button">Entrar</button>
+      </form>
+
+      <form id="register-form" class="auth-form" onsubmit="event.preventDefault()">
+        <div class="input-group">
+          <label for="register-username">Nome de Usuário</label>
+          <input type="text" id="register-username" required placeholder="Escolha um nome de usuário" />
+        </div>
+        <div class="input-group">
+          <label for="register-email">Email</label>
+          <input type="email" id="register-email" required placeholder="seu.email@exemplo.com" />
+        </div>
+        <div class="input-group">
+          <label for="register-password">Senha</label>
+          <input type="password" id="register-password" required placeholder="Crie uma senha" />
+        </div>
+        <button type="submit" id="botao-registrar" class="auth-button">Cadastrar</button>
+      </form>
+    </div>
+  </main>
+
+  <script src="login.js"></script>
+</body>
+
+</html>
