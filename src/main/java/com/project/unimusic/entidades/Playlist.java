@@ -17,7 +17,7 @@ public class Playlist {
     private String nome;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usario_id", nullable = false)
+    @JoinColumn(name = "usuario_id", nullable = false)
     @com.fasterxml.jackson.annotation.JsonBackReference
     private Usuario usuario;
 

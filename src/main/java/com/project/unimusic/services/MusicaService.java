@@ -25,11 +25,10 @@ public class MusicaService {
     }
     
     public Musica save(Musica musica) {
-        // Prevent duplicate by titulo
         List<Musica> existing = musicaRepository.findByTituloContainingIgnoreCase(musica.getTitulo());
         for (Musica m : existing) {
             if (m.getTitulo().equalsIgnoreCase(musica.getTitulo())) {
-                return m; // Return existing instead of creating duplicate
+                return m;
             }
         }
         return musicaRepository.save(musica);
@@ -39,9 +38,6 @@ public class MusicaService {
         return musicaRepository.findByTituloContainingIgnoreCase(titulo);
     }
 
-    public Path getMusicFilePath(String filename) {
-        return Paths.get("musicas/Double-F the King - Heartstrings/" + filename);
-    }
 }
 
 

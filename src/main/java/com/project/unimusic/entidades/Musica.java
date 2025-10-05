@@ -6,11 +6,6 @@ import java.util.UUID;
 @Entity
 @Table(name = "musicas")
 public class Musica {
-    // ...existing code...
-    // Add this if you have a Set<Playlist> playlists in Musica
-    // @ManyToMany(mappedBy = "musicas")
-    // @com.fasterxml.jackson.annotation.JsonBackReference
-    // private Set<Playlist> playlists;
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
