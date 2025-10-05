@@ -1,6 +1,6 @@
-# Unimusic
+# UniMusic
 
-Unimusic é um aplicativo de música desenvolvido com **Java**, **HTML**, **CSS** e **JavaScript**, que permite aos usuários fazer login, visualizar e reproduzir músicas de forma intuitiva.
+UniMusic é um aplicativo de música desenvolvido com **Java**, **HTML**, **CSS** e **JavaScript**, que permite aos usuários fazer login, visualizar e reproduzir músicas de forma intuitiva.
 
 ## Funcionalidades
 
