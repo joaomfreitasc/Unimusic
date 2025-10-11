@@ -4,27 +4,30 @@ const playlistsContainer = document.getElementById("playlists");
 
 let playlists = {};
 let listaMusicas = [];
-let audioAtual = null;
-let playlistAtual = null;
-let indiceAtual = 0;
 
-// Verificar se usuário está logado
-document.addEventListener("DOMContentLoaded", () => {
-  const usuarioLogado = localStorage.getItem("usuarioLogado");
-  if (!usuarioLogado) {
-    window.location.href = "login.html";
+document.addEventListener("DOMContentLoaded", async () => {
+  const estadoSalvo = playerGlobal.restaurarEstado();
+  if (estadoSalvo && estadoSalvo.musicaAtual) {
+    atualizarInfoPlayer(estadoSalvo.musicaAtual);
+    const volumeSlider = document.getElementById("volume-slider");
+    if (volumeSlider) {
+      volumeSlider.value = estadoSalvo.volume || 1;
+      atualizarRastroSlider(volumeSlider);
+    }
+    atualizarEstadoPlayer();
   }
 
-  // Inicializar audio
-  audioAtual = new Audio();
-  const volumeSlider = document.getElementById("volume-slider");
-  if (volumeSlider) {
-    audioAtual.volume = volumeSlider.value;
-  }
+  await playerGlobal.restaurarSessao();
 
   carregarMusicas();
   carregarPlaylists();
   configurarControlesPlayer();
+
+  window.addEventListener("musicaAlterada", (e) => {
+    const { musica } = e.detail;
+    atualizarInfoPlayer(musica);
+    atualizarEstadoPlayer();
+  });
 });
 
 // Configurar controles do player
@@ -37,42 +40,80 @@ function configurarControlesPlayer() {
 
   if (playButton) {
     playButton.onclick = () => {
-      if (audioAtual.src) {
-        if (audioAtual.paused) {
-          audioAtual.play();
-        } else {
-          audioAtual.pause();
-        }
-        atualizarBotaoPlay();
+      if (playerGlobal.audio.src) {
+        playerGlobal.alternarPlay();
       }
+      atualizarEstadoPlayer();
     };
   }
 
   if (volumeSlider) {
     volumeSlider.oninput = (e) => {
-      audioAtual.volume = e.target.value;
+      playerGlobal.audio.volume = e.target.value;
       atualizarRastroSlider(volumeSlider);
     };
   }
 
   if (nextButton) {
     nextButton.onclick = () => {
-      if (playlistAtual && indiceAtual < playlists[playlistAtual].length - 1) {
-        indiceAtual++;
-        tocarMusica(playlistAtual, indiceAtual);
-      }
+      playerGlobal.proximaMusica(playlistAtualLista);
+      atualizarEstadoPlayer();
     };
   }
 
   if (prevButton) {
     prevButton.onclick = () => {
-      if (playlistAtual && indiceAtual > 0) {
-        indiceAtual--;
-        tocarMusica(playlistAtual, indiceAtual);
+      playerGlobal.musicaAnterior(playlistAtualLista);
+      atualizarEstadoPlayer();
+    };
+  }
+
+  window.addEventListener("metadataLoaded", (e) => {
+    const tempoTotal = document.getElementById("time-total");
+    if (tempoTotal) tempoTotal.textContent = formatarTempo(e.detail.duration);
+    atualizarRastroSlider(slider);
+  });
+
+  window.addEventListener("timeUpdated", (e) => {
+    const { currentTime, duration } = e.detail;
+    if (slider) {
+      slider.value = (currentTime / duration) * 100 || 0;
+      atualizarRastroSlider(slider);
+    }
+    const tempoAtual = document.getElementById("time-current");
+    if (tempoAtual) tempoAtual.textContent = formatarTempo(currentTime);
+  });
+
+  window.addEventListener("trackEnded", () => {
+    if (playerGlobal.playlistAtual) {
+      playerGlobal.proximaMusica(playlists[playerGlobal.playlistAtual]);
+      const info = playerGlobal.obterInfo();
+      if (info.musicaAtual) {
+        atualizarInfoPlayer(info.musicaAtual);
+        atualizarEstadoPlayer();
       }
+    }
+  });
+
+  window.addEventListener("autoplayFailed", atualizarEstadoPlayer);
+
+  if (slider) {
+    slider.oninput = () => {
+      if (playerGlobal.audio.duration) {
+        playerGlobal.audio.currentTime =
+          (slider.value / 100) * playerGlobal.audio.duration;
+      }
+      atualizarRastroSlider(slider);
     };
   }
 }
+
+// Atualizar estado quando voltar à página
+window.addEventListener("focus", () => {
+  atualizarEstadoPlayer();
+});
+
+let playlistAtualLista = [];
 
 // Buscar músicas do servidor
 async function carregarMusicas() {
@@ -156,10 +197,10 @@ function renderizarPlaylists() {
       "margin-top: 1rem; padding: 0.6rem 1rem; background-color: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; color: var(--text-primary); font-weight: 500; width: 100%;";
 
     const botaoRemover = document.createElement("button");
-    botaoRemover.textContent = "Deletar playlist";
+    botaoRemover.textContent = "🗑️ Deletar playlist";
     botaoRemover.onclick = () => removerPlaylist(nome);
     botaoRemover.style.cssText =
-      "margin-top: 0.5rem; padding: 0.6rem 1rem; background-color: #E53E3E; border: none; border-radius: 6px; cursor: pointer; color: white; font-weight: 500; width: 100%;";
+      "margin-top: 0.5rem; padding: 0.6rem 1rem; background-color: #E53E3E; border: none; border-radius: 6px; cursor: pointer; color: white; font-weight: 500;";
 
     playlistDiv.appendChild(titulo);
     playlistDiv.appendChild(botaoPlayPlaylist);
@@ -169,6 +210,12 @@ function renderizarPlaylists() {
 
     playlistsContainer.appendChild(playlistDiv);
   });
+}
+
+// Função deslogar
+function deslogar() {
+  localStorage.removeItem("usuarioLogado");
+  window.location.href = "login.html";
 }
 
 // Abrir modal para adicionar música
@@ -251,8 +298,13 @@ function atualizarInfoPlayer(musica) {
   const album = musica.artista?.albums?.[0];
   const tituloAlbum = album?.titulo || "Álbum Desconhecido";
   const dataLancamento = formatarData(album?.dataDeLancamento);
-  const urlCapa =
+
+  // Se capaUrl não tiver http, adiciona a URL base do servidor
+  let urlCapa =
     album?.capaUrl || "https://via.placeholder.com/400x400?text=UniMusic";
+  if (urlCapa && !urlCapa.startsWith("http")) {
+    urlCapa = "http://localhost:8080/" + urlCapa;
+  }
 
   const infoSong = document.getElementById("info-song");
   const infoArtist = document.getElementById("info-artist");
@@ -263,7 +315,15 @@ function atualizarInfoPlayer(musica) {
   if (infoSong) infoSong.textContent = musica.titulo || "Título Desconhecido";
   if (infoArtist)
     infoArtist.textContent = musica.artista?.nome || "Artista Desconhecido";
-  if (capaAlbum) capaAlbum.src = urlCapa;
+
+  if (capaAlbum) {
+    capaAlbum.src = urlCapa;
+    // Se a capa falhar em carregar, usa o placeholder
+    capaAlbum.onerror = function () {
+      this.src = "https://via.placeholder.com/400x400?text=UniMusic";
+    };
+  }
+
   if (infoAlbum) infoAlbum.textContent = tituloAlbum;
   if (infoRelease) infoRelease.textContent = dataLancamento;
 }
@@ -296,80 +356,21 @@ async function tocarPlaylist(nomePlaylist) {
     return;
   }
 
-  playlistAtual = nomePlaylist;
-  indiceAtual = 0;
-  tocarMusica(nomePlaylist, 0);
+  playlistAtualLista = playlists[nomePlaylist];
+  playerGlobal.tocarMusica(playlists[nomePlaylist][0], nomePlaylist, 0);
+  atualizarInfoPlayer(playlists[nomePlaylist][0]);
+  atualizarEstadoPlayer();
 }
 
 // Tocar música da playlist
 async function tocarMusica(nomePlaylist, indice) {
   try {
-    playlistAtual = nomePlaylist;
-    indiceAtual = indice;
+    playlistAtualLista = playlists[nomePlaylist];
     const musica = playlists[nomePlaylist][indice];
+
+    playerGlobal.tocarMusica(musica, nomePlaylist, indice);
     atualizarInfoPlayer(musica);
-
-    const artista = encodeURIComponent(musica.artista?.nome || "Desconhecido");
-    const album = encodeURIComponent(
-      musica.artista?.albums?.[0]?.titulo || "Desconhecido",
-    );
-    const titulo = encodeURIComponent(musica.titulo);
-
-    const url = `http://localhost:8080/musicas/stream/${artista}/${album}/${titulo}.mp3`;
-
-    const res = await fetch(url);
-    if (!res.ok) {
-      console.error(`Erro HTTP! status: ${res.status}`);
-      return;
-    }
-
-    const arrayBuffer = await res.arrayBuffer();
-    const blob = new Blob([arrayBuffer], { type: "audio/mpeg" });
-    const urlAudio = URL.createObjectURL(blob);
-
-    audioAtual.src = urlAudio;
-    audioAtual.play();
-
-    // Atualizar o ícone de play/pause
-    atualizarBotaoPlay();
-
-    // Atualizar informações de tempo
-    audioAtual.onloadedmetadata = () => {
-      const tempoTotal = document.getElementById("time-total");
-      if (tempoTotal)
-        tempoTotal.textContent = formatarTempo(audioAtual.duration);
-      atualizarRastroSlider(document.getElementById("slider"));
-    };
-
-    audioAtual.ontimeupdate = () => {
-      const { currentTime, duration } = audioAtual;
-      const slider = document.getElementById("slider");
-      const tempoAtual = document.getElementById("time-current");
-
-      if (slider) {
-        slider.value = (currentTime / duration) * 100 || 0;
-        atualizarRastroSlider(slider);
-      }
-      if (tempoAtual) tempoAtual.textContent = formatarTempo(currentTime);
-    };
-
-    // Tocar próxima automaticamente ao fim
-    audioAtual.onended = () => {
-      if (indiceAtual < playlists[playlistAtual].length - 1) {
-        tocarMusica(playlistAtual, indiceAtual + 1);
-      }
-    };
-
-    // Controlar slider
-    const slider = document.getElementById("slider");
-    if (slider) {
-      slider.oninput = () => {
-        if (audioAtual.duration) {
-          audioAtual.currentTime = (slider.value / 100) * audioAtual.duration;
-        }
-        atualizarRastroSlider(slider);
-      };
-    }
+    atualizarEstadoPlayer();
   } catch (err) {
     console.error("Erro ao tocar música:", err);
     alert("Erro ao tocar a música");
@@ -388,13 +389,17 @@ function atualizarBotaoPlay() {
   const pathElement = playPauseIcon.querySelector("path");
   if (!pathElement) return;
 
-  if (audioAtual.paused) {
-    pathElement.setAttribute("d", playIconPath);
-    playPauseIcon.style.transform = "translateX(2px)";
-  } else {
+  if (playerGlobal.estaTocando) {
     pathElement.setAttribute("d", pauseIconPath);
     playPauseIcon.style.transform = "none";
+  } else {
+    pathElement.setAttribute("d", playIconPath);
+    playPauseIcon.style.transform = "translateX(2px)";
   }
+}
+
+function atualizarEstadoPlayer() {
+  atualizarBotaoPlay();
 }
 
 // Criar nova playlist

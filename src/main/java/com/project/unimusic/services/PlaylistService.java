@@ -1,9 +1,12 @@
 package com.project.unimusic.services;
 
-import com.project.unimusic.entidades.Playlist;
 import com.project.unimusic.entidades.Musica;
-import com.project.unimusic.repositories.PlaylistRepository;
+import com.project.unimusic.entidades.Playlist;
 import com.project.unimusic.repositories.MusicaRepository;
+import com.project.unimusic.repositories.PlaylistRepository;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,8 +32,13 @@ public class PlaylistService {
     }
 
     @Transactional
-    public Optional<Playlist> addMusicaToPlaylist(UUID playlistId, UUID musicaId) {
-        Optional<Playlist> playlistOpt = playlistRepository.findById(playlistId);
+    public Optional<Playlist> addMusicaToPlaylist(
+        UUID playlistId,
+        UUID musicaId
+    ) {
+        Optional<Playlist> playlistOpt = playlistRepository.findById(
+            playlistId
+        );
         Optional<Musica> musicaOpt = musicaRepository.findById(musicaId);
 
         if (playlistOpt.isPresent() && musicaOpt.isPresent()) {

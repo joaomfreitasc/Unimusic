@@ -61,6 +61,16 @@
         </header>
 
         <main class="app-container">
+            <aside class="sidebar">
+                <h3>Fila de Reprodução</h3>
+                <ul id="desktop-queue-view" class="track-list">
+                    <li class="track-item active">
+                        <span class="track-title">Carregando Músicas...</span>
+                        <span class="track-artist">Aguarde</span>
+                    </li>
+                </ul>
+            </aside>
+
             <section class="music-player">
                 <img
                     id="album-art"
@@ -202,6 +212,7 @@
             </section>
         </main>
 
+        <script src="playerGlobal.js"></script>
         <script src="login.js"></script>
         <script src="playlists.js"></script>
     </body>
