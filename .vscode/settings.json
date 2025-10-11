@@ -1,5 +1,3 @@
 {
     "java.compile.nullAnalysis.mode": "automatic",
-    "maven.executable.options": "/usr/share/maven",
-    "java.jdt.ls.java.home": "/usr/lib/jvm/java-21-openjdk-amd64"
 }
