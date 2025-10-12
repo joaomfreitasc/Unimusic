@@ -6,7 +6,7 @@ public class AlbumDTO {
     private UUID id;
     private String titulo;
     private String dataDeLancamento;
-    private String capaUrl;
+    private UUID artistaId;
 
     public UUID getId() {
         return id;
@@ -32,11 +32,11 @@ public class AlbumDTO {
         this.dataDeLancamento = dataDeLancamento;
     }
 
-    public String getCapaUrl() {
-        return capaUrl;
+    public void setArtistaId(UUID artistaId) {
+        this.artistaId = artistaId;
     }
 
-    public void setCapaUrl(String capaUrl) {
-        this.capaUrl = capaUrl;
+    public UUID getArtistaId() {
+        return artistaId;
     }
 }

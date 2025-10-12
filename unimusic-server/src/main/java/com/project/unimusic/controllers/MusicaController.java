@@ -2,23 +2,23 @@ package com.project.unimusic.controllers;
 
 import com.project.unimusic.services.MusicaService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.Files;
+import com.project.unimusic.entidades.Artista;
+import com.project.unimusic.entidades.Album;
+import com.project.unimusic.services.ArtistaService;
+import com.project.unimusic.services.AlbumService;
 
 import java.util.List;
 import java.util.Optional;
 
-import com.project.unimusic.dto.ArtistaDTO;
-import com.project.unimusic.dto.AlbumDTO;
 import com.project.unimusic.dto.MusicaDTO;
+import com.project.unimusic.dto.MusicaResponseDTO;
+import com.project.unimusic.dto.MusicaRegisterDTO;
 import java.util.stream.Collectors;
 import java.util.UUID;
 
@@ -34,54 +34,52 @@ public class MusicaController {
     @Autowired
     private MusicaService musicaService;
 
-    @Value("${base}")
-    private String base;
+    @Autowired
+    private ArtistaService artistaService;
+
+    @Autowired
+    private AlbumService albumService;
 
     @GetMapping
-    public ResponseEntity<List<MusicaDTO>> getAllMusicas() {
-        List<MusicaDTO> musicasDTO = musicaService.findAll().stream().map(musica -> {
-            MusicaDTO musicaDTO = new MusicaDTO();
-            musicaDTO.setId(musica.getId());
-            musicaDTO.setTitulo(musica.getTitulo());
-            musicaDTO.setDuracao(musica.getDuracao());
-
-            ArtistaDTO artistaDTO = new ArtistaDTO();
-            artistaDTO.setId(musica.getArtista().getId());
-            artistaDTO.setNome(musica.getArtista().getNome());
-            artistaDTO.setAlbums(musica.getArtista().getAlbums().stream().map(album -> {
-                AlbumDTO albumDTO = new AlbumDTO();
-                albumDTO.setId(album.getId());
-                albumDTO.setTitulo(album.getTitulo());
-                albumDTO.setDataDeLancamento(album.getDataDeLancamento());
-                albumDTO.setCapaUrl(album.getCapaUrl());
-                return albumDTO;
-            }).collect(Collectors.toList()));
-
-            musicaDTO.setArtista(artistaDTO);
-            return musicaDTO;
-        }).collect(Collectors.toList());
-
-        return ResponseEntity.ok(musicasDTO);
+    public ResponseEntity<List<MusicaResponseDTO>> getAllMusicas() {
+        List<MusicaResponseDTO> lista = musicaService.findAll()
+                .stream()
+                .map(MusicaResponseDTO::new)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(lista);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Object> getMusicaById(@PathVariable UUID id) {
-        Optional<Musica> musicaOpt = musicaService.findById(id);
-        if (musicaOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.status(HttpStatus.OK).body(musicaOpt.get());
+    public ResponseEntity<MusicaResponseDTO> getMusicaById(@PathVariable UUID id) {
+        return musicaService.findById(id)
+                .map(m -> ResponseEntity.ok(new MusicaResponseDTO(m)))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public ResponseEntity<Object> registrarMusica(@RequestBody @Valid MusicaDTO musicaDTO,
+    public ResponseEntity<Object> registrarMusica(@RequestBody @Valid MusicaRegisterDTO musicaDTO,
             BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Dados inválidos");
         }
 
+        Optional<Artista> artistaOpt = artistaService.findById(musicaDTO.getArtistaId());
+
+        if (artistaOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Artista não encontrado com o ID fornecido.");
+        }
+
+        Optional<Album> albumOpt = albumService.findById(musicaDTO.getAlbumId());
+
+        if (albumOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Album não encontrado com o ID fornecido.");
+        }
+
         Musica musica = new Musica();
         BeanUtils.copyProperties(musicaDTO, musica);
+
+        musica.setArtista(artistaOpt.get());
+        musica.setAlbum(albumOpt.get());
 
         Musica musicaSalva = musicaService.save(musica);
         return ResponseEntity.status(HttpStatus.CREATED).body(musicaSalva);
@@ -114,23 +112,36 @@ public class MusicaController {
     public ResponseEntity<Resource> streamMusica(@PathVariable String artista, @PathVariable String album,
             @PathVariable String musica) {
         try {
-            Path arquivo = Paths.get(base, artista, album, musica);
+            String key = artista + "/" + album + "/" + musica + ".mp3";
 
-            if (!Files.exists(arquivo)) {
-                throw new RuntimeException("Arquivo nao encontrado: " + arquivo.toString());
-            }
+            InputStreamResource resource = musicaService.streamFile(key);
 
-            Resource resource = new UrlResource(arquivo.toUri());
-
-            if (resource.exists() || resource.isReadable()) {
-                return ResponseEntity.ok()
-                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; arquivo=\"" + resource.getFilename() + "\"")
-                        .body(resource);
-            } else {
-                throw new RuntimeException("Arquivo nao legivel: " + arquivo.toString());
-            }
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + musica + "\"")
+                    .header(HttpHeaders.CONTENT_TYPE, "audio/mpeg")
+                    .body(resource);
         } catch (Exception e) {
-            throw new RuntimeException("Error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    @GetMapping("/capa/{artista}/{album}/{musica}")
+    public ResponseEntity<InputStreamResource> streamCover(
+            @PathVariable String artista,
+            @PathVariable String album,
+            @PathVariable String musica) {
+        try {
+            String key = artista + "/" + album + "/cover.jpg";
+            InputStreamResource cover = musicaService.streamFile(key);
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + musica + ".jpg\"")
+                    .header(HttpHeaders.CONTENT_TYPE, "image/jpeg")
+                    .body(cover);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 

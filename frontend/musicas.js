@@ -1,36 +1,5 @@
 const el = (id) => document.getElementById(id);
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const usuarioLogado = localStorage.getItem("usuarioLogado");
-  if (!usuarioLogado) {
-    window.location.href = "login.html";
-  }
-
-  const estadoSalvo = playerGlobal.restaurarEstado();
-  if (estadoSalvo && estadoSalvo.musicaAtual) {
-    atualizarInfoMusica(estadoSalvo.musicaAtual);
-    document.querySelector(".music-player").style.display = "flex";
-    if (elementos.volumeSlider) {
-      elementos.volumeSlider.value = estadoSalvo.volume || 1;
-      atualizarRastroSlider(elementos.volumeSlider);
-    }
-    atualizarEstadoPlayer();
-  }
-
-  await playerGlobal.restaurarSessao();
-
-  buscarMusicas();
-  configurarControlesPlayer();
-
-  window.addEventListener("estadoPlayerRestaurado", () => {
-    const info = playerGlobal.obterInfo();
-    if (info.musicaAtual) {
-      atualizarInfoMusica(info.musicaAtual);
-      atualizarEstadoPlayer();
-    }
-  });
-});
-
 const elementos = {
   infoMusica: el("info-song"),
   infoArtista: el("info-artist"),
@@ -51,19 +20,51 @@ const elementos = {
 
 let listaMusicas = [];
 
+document.addEventListener("DOMContentLoaded", async () => {
+  const usuarioLogado = localStorage.getItem("usuarioLogado");
+  if (!usuarioLogado) window.location.href = "login.html";
+
+  const estadoSalvo = playerGlobal.restaurarEstado();
+  if (estadoSalvo?.musicaAtual) {
+    atualizarInfoMusica(estadoSalvo.musicaAtual);
+    document.querySelector(".music-player").style.display = "flex";
+    if (elementos.volumeSlider) {
+      elementos.volumeSlider.value = estadoSalvo.volume || 1;
+      atualizarRastroSlider(elementos.volumeSlider);
+    }
+    atualizarEstadoPlayer();
+  }
+
+  await playerGlobal.restaurarSessao();
+  await buscarMusicas();
+  configurarControlesPlayer();
+
+  window.addEventListener("estadoPlayerRestaurado", () => {
+    const info = playerGlobal.obterInfo();
+    if (info.musicaAtual) {
+      atualizarInfoMusica(info.musicaAtual);
+      atualizarEstadoPlayer();
+    }
+  });
+
+  window.addEventListener("musicaAlterada", (e) => {
+    const { musica } = e.detail;
+    atualizarInfoMusica(musica);
+    atualizarEstadoPlayer();
+});
+});
+
 async function fetchConfig() {
-    const response = await fetch('config.json');
-    return response.json();
+  const response = await fetch('config.json');
+  return response.json();
 }
 
-const formatarTempo = (s) => {
+function formatarTempo(s) {
   if (isNaN(s)) return "0:00";
   const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60)
-    .toString()
-    .padStart(2, "0");
+  const sec = Math.floor(s % 60).toString().padStart(2, "0");
   return `${m}:${sec}`;
-};
+}
 
 function formatarData(dataString) {
   if (!dataString) return "Data desconhecida";
@@ -82,7 +83,9 @@ async function buscarMusicas() {
     const config = await fetchConfig();
     const res = await fetch(`${config.API_URL}/musicas`);
     if (!res.ok) throw new Error(res.statusText);
-    listaMusicas = await res.json();
+
+    let data = await res.json();
+    listaMusicas = data.map(m => m.musicaDTO || m);
     elementos.filaDesktop.innerHTML = "";
     atualizarRastroSlider(elementos.volumeSlider);
 
@@ -93,23 +96,18 @@ async function buscarMusicas() {
       document.querySelector(".music-player").style.display = "none";
     }
 
-    // Renderizar fila
     listaMusicas.forEach((musica, indice) => {
       const li = document.createElement("li");
       li.className = `track-item ${playerGlobal.musicaAtual?.id === musica.id ? "active" : ""}`;
-
-      const titulo = document.createElement("span");
-      titulo.className = "track-title";
-      titulo.textContent = musica.titulo;
-
-      const artista = document.createElement("span");
-      artista.className = "track-artist";
-      artista.textContent = musica.artista?.nome;
-
-      li.appendChild(titulo);
-      li.appendChild(artista);
-
+      li.innerHTML = `
+        <span class="track-title">${musica.titulo}</span>
+        <span class="track-artist">${musica.artista?.nome}</span>
+      `;
       li.onclick = () => {
+        if (playerGlobal.audio) {
+            playerGlobal.audio.currentTime = 0;
+        }
+        
         playerGlobal.tocarMusica(musica, null, indice);
         atualizarInfoMusica(musica);
         atualizarFila();
@@ -123,75 +121,66 @@ async function buscarMusicas() {
 }
 
 async function atualizarInfoMusica(musica) {
-  const album = musica.artista?.albums?.[0];
+  if (!musica) return;
+
+  const album = musica.album;
+  const artista = musica.artista;
+  const tituloMusica = musica.titulo || "Título Desconhecido";
   const tituloAlbum = album?.titulo || "Álbum Desconhecido";
+  const nomeArtista = artista?.nome || "Artista Desconhecido";
   const dataLancamento = formatarData(album?.dataDeLancamento);
-  let urlCapa =
-    album?.capaUrl || "https://via.placeholder.com/400x400?text=UniMusic";
+  const urlCapa = await getCapaAlbum(musica);
 
-  if (urlCapa && !urlCapa.startsWith("http")) {
-    const config = await fetchConfig();
-    urlCapa = `${config.API_URL} \ ${urlCapa}`;
-  }
-
-  elementos.infoMusica.textContent = musica.titulo || "Título Desconhecido";
-  elementos.infoArtista.textContent =
-    musica.artista?.nome || "Artista Desconhecido";
-  elementos.capaAlbum.src = urlCapa;
-  elementos.capaAlbum.onerror = function () {
-    this.src = "https://via.placeholder.com/400x400?text=UniMusic";
-  };
+  elementos.infoMusica.textContent = tituloMusica;
+  elementos.infoArtista.textContent = nomeArtista;
   elementos.infoAlbum.textContent = tituloAlbum;
   elementos.infoDataLancamento.textContent = dataLancamento;
-
+  elementos.capaAlbum.src = urlCapa;
   atualizarFila();
+}
+
+async function getCapaAlbum(musica) {
+  try {
+    const artista = encodeURIComponent(musica.artista?.nome || "Desconhecido");
+    const album = encodeURIComponent(musica.album?.titulo || "Desconhecido");
+    const titulo = encodeURIComponent(musica.titulo);
+
+    const config = await fetchConfig();
+    const url = `${config.API_URL}/musicas/capa/${artista}/${album}/${titulo}`
+    const res = await fetch(url);
+
+    if (!res.ok) {
+      console.error(`Erro HTTP! status: ${res.status}`);
+      return;
+    }
+
+    const arrayBuffer = await res.arrayBuffer();
+    const blob = new Blob([arrayBuffer], { type: "audio/mpeg" });
+    
+    return URL.createObjectURL(blob);
+
+  } catch (err) {
+    console.error("Erro ao obter capa do álbum:", err);
+  }
 }
 
 function atualizarFila() {
   document.querySelectorAll(".track-item").forEach((item, index) => {
-    item.classList.toggle(
-      "active",
-      playerGlobal.musicaAtual?.id === listaMusicas[index]?.id,
-    );
+    item.classList.toggle("active", playerGlobal.musicaAtual?.id === listaMusicas[index]?.id);
   });
 }
 
 function configurarControlesPlayer() {
-  // Volume
-  if (elementos.volumeSlider) {
-    elementos.volumeSlider.oninput = (e) => {
-      playerGlobal.audio.volume = e.target.value;
-      atualizarRastroSlider(elementos.volumeSlider);
-    };
-    playerGlobal.audio.volume = elementos.volumeSlider.value;
-  }
-
-  // Play/Pause
-  if (elementos.botaoPlay) {
-    elementos.botaoPlay.onclick = alternarPlay;
-  }
-
-  // Próxima
-  if (elementos.botaoProximo) {
-    elementos.botaoProximo.onclick = tocarProxima;
-  }
-
-  // Anterior
-  if (elementos.botaoAnterior) {
-    elementos.botaoAnterior.onclick = tocarAnterior;
-  }
-
   if (elementos.volumeSlider) {
     elementos.volumeSlider.oninput = (e) => {
       playerGlobal.audio.volume = e.target.value;
       atualizarRastroSlider(elementos.volumeSlider);
     };
   }
-  if (elementos.botaoPlay) elementos.botaoPlay = alternarPlay;
-  if (elementos.botaoProximo)
-    elementos.botaoProximo.onclick = () => tocarProxima();
-  if (elementos.botaoAnterior)
-    elementos.botaoAnterior.onclick = () => tocarAnterior();
+
+  if (elementos.botaoPlay) elementos.botaoPlay.onclick = alternarPlay;
+  if (elementos.botaoProximo) elementos.botaoProximo.onclick = tocarProxima;
+  if (elementos.botaoAnterior) elementos.botaoAnterior.onclick = tocarAnterior;
 
   if (elementos.alternarModoEscuro) {
     elementos.alternarModoEscuro.onclick = () => {
@@ -209,11 +198,11 @@ function configurarControlesPlayer() {
     if (elementos.barraProgresso) {
       elementos.barraProgresso.value = (currentTime / duration) * 100 || 0;
       atualizarRastroSlider(elementos.barraProgresso);
+      elementos.tempoAtual.textContent = formatarTempo(currentTime);
     }
   });
 
-  window.addEventListener("trackEnded", () => tocarProxima());
-
+  window.addEventListener("trackEnded", tocarProxima);
   window.addEventListener("autoplayFailed", atualizarEstadoPlayer);
 
   if (elementos.barraProgresso) {
@@ -228,10 +217,8 @@ function configurarControlesPlayer() {
 }
 
 function alternarPlay() {
-  if (!playerGlobal.audio.src) {
-    if (listaMusicas.length > 0) {
-      playerGlobal.tocarMusica(listaMusicas[0], null, 0);
-    }
+  if (!playerGlobal.audio.src && listaMusicas.length > 0) {
+    playerGlobal.tocarMusica(listaMusicas[0], null, 0);
     return;
   }
   playerGlobal.alternarPlay();
@@ -239,19 +226,16 @@ function alternarPlay() {
 }
 
 function atualizarBotaoPlay() {
-  const playIconPath =
-    "M7.5 5.625v12.75a.75.75 0 001.14.643l10.5-6.375a.75.75 0 000-1.286L8.64 4.982A.75.75 0 007.5 5.625z";
-  const pauseIconPath =
-    "M6 6.75A.75.75 0 016.75 6h.75a.75.75 0 01.75.75v10.5a.75.75 0 01-.75.75h-.75a.75.75 0 01-.75-.75V6.75zM15.75 6a.75.75 0 00-.75.75v10.5a.75.75 0 00.75.75h.75a.75.75 0 00.75-.75V6.75a.75.75 0 00-.75-.75h-.75z";
-
+  const playPath = "M7.5 5.625v12.75a.75.75 0 001.14.643l10.5-6.375a.75.75 0 000-1.286L8.64 4.982A.75.75 0 007.5 5.625z";
+  const pausePath = "M6 6.75A.75.75 0 016.75 6h.75a.75.75 0 01.75.75v10.5a.75.75 0 01-.75.75h-.75a.75.75 0 01-.75-.75V6.75zM15.75 6a.75.75 0 00-.75.75v10.5a.75.75 0 00.75.75h.75a.75.75 0 00.75-.75V6.75a.75.75 0 00-.75-.75h-.75z";
   const pathElement = elementos.playPauseIcon.querySelector("path");
   if (!pathElement) return;
 
   if (playerGlobal.estaTocando) {
-    pathElement.setAttribute("d", pauseIconPath);
+    pathElement.setAttribute("d", pausePath);
     elementos.playPauseIcon.style.transform = "none";
   } else {
-    pathElement.setAttribute("d", playIconPath);
+    pathElement.setAttribute("d", playPath);
     elementos.playPauseIcon.style.transform = "translateX(2px)";
   }
 }
@@ -263,18 +247,8 @@ function atualizarEstadoPlayer() {
 
 function tocarProxima() {
   playerGlobal.proximaMusica(listaMusicas);
-  const info = playerGlobal.obterInfo();
-  if (info.musicaAtual) {
-    atualizarInfoMusica(info.musicaAtual);
-  }
-  atualizarEstadoPlayer();
 }
 
 function tocarAnterior() {
   playerGlobal.musicaAnterior(listaMusicas);
-  const info = playerGlobal.obterInfo();
-  if (info.musicaAtual) {
-    atualizarInfoMusica(info.musicaAtual);
-  }
-  atualizarEstadoPlayer();
 }

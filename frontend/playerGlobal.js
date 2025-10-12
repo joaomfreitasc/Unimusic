@@ -1,3 +1,8 @@
+async function fetchConfig() {
+  const response = await fetch('config.json');
+  return response.json();
+}
+
 class PlayerGlobal {
   constructor() {
     this.audio = null;
@@ -93,25 +98,18 @@ class PlayerGlobal {
     return estado;
   }
 
-  // Função para restaurar a música ao carregar a página
   async restaurarSessao() {
     const estadoSalvo = this.restaurarEstado();
-    if (!estadoSalvo || !estadoSalvo.musicaAtual) {
-      return;
-    }
-
+    if (!estadoSalvo || !estadoSalvo.musicaAtual) return;
     this.isRestoring = true;
 
     try {
       const musica = estadoSalvo.musicaAtual;
-      const artista = encodeURIComponent(
-        musica.artista?.nome || "Desconhecido",
-      );
-      const album = encodeURIComponent(
-        musica.artista?.albums?.[0]?.titulo || "Desconhecido",
-      );
+      const artista = encodeURIComponent(musica.artista?.nome || "Desconhecido");
+      const album = encodeURIComponent(musica.album?.titulo || "Desconhecido");
       const titulo = encodeURIComponent(musica.titulo);
-      const url = `http://localhost:8080/musicas/stream/${artista}/${album}/${titulo}.mp3`;
+      const config = await fetchConfig();
+      const url = `${config.API_URL}/musicas/stream/${artista}/${album}/${titulo}`;
 
       const res = await fetch(url);
       if (!res.ok) throw new Error(`Erro HTTP: ${res.status}`);
@@ -125,11 +123,10 @@ class PlayerGlobal {
         if (this.estaTocando) {
           this.audio.play().catch((e) => {
             console.warn("Autoplay bloqueado pelo navegador.", e);
-            this.estaTocando = false; // Garante que o estado reflita a realidade
+            this.estaTocando = false;
             this.salvarEstado();
           });
         }
-        // Dispara um evento para que as páginas saibam que o player foi restaurado
         window.dispatchEvent(new CustomEvent("estadoPlayerRestaurado"));
       };
     } catch (err) {
@@ -144,15 +141,12 @@ class PlayerGlobal {
       this.playlistAtual = playlist;
       this.indiceAtual = indice;
 
-      const artista = encodeURIComponent(
-        musica.artista?.nome || "Desconhecido",
-      );
-      const album = encodeURIComponent(
-        musica.artista?.albums?.[0]?.titulo || "Desconhecido",
-      );
+      const artista = encodeURIComponent(musica.artista?.nome || "Desconhecido");
+      const album = encodeURIComponent(musica.album?.titulo || "Desconhecido");
       const titulo = encodeURIComponent(musica.titulo);
 
-      const url = `http://localhost:8080/musicas/stream/${artista}/${album}/${titulo}.mp3`;
+      const config = await fetchConfig();
+      const url = `${config.API_URL}/musicas/stream/${artista}/${album}/${titulo}`;
 
       const res = await fetch(url);
       if (!res.ok) {
@@ -162,9 +156,7 @@ class PlayerGlobal {
 
       const arrayBuffer = await res.arrayBuffer();
       const blob = new Blob([arrayBuffer], { type: "audio/mpeg" });
-      const urlAudio = URL.createObjectURL(blob);
-
-      this.audio.src = urlAudio;
+      this.audio.src = URL.createObjectURL(blob);
       this.audio.play();
       this.estaTocando = true;
       this.salvarEstado();
@@ -197,53 +189,20 @@ class PlayerGlobal {
 
   alternarPlay() {
     if (!this.audio || !this.audio.src) return;
-
-    if (this.estaTocando) {
-      this.pausar();
-    } else {
-      this.retomar();
-    }
+    this.estaTocando ? this.pausar() : this.retomar();
   }
 
   proximaMusica(listaMusicas) {
-    if (this.playlistAtual) {
-      if (this.indiceAtual < this.playlistAtual.length - 1) {
-        this.indiceAtual++;
-        this.tocarMusica(
-          listaMusicas[this.indiceAtual],
-          this.playlistAtual,
-          this.indiceAtual,
-        );
-      }
-    } else {
-      const indice = listaMusicas.findIndex(
-        (m) => m.id === this.musicaAtual?.id,
-      );
-      if (indice !== -1 && indice < listaMusicas.length - 1) {
-        const proximaMusica = listaMusicas[indice + 1];
-        this.tocarMusica(proximaMusica, null, indice + 1);
-      }
+    const indice = listaMusicas.findIndex((m) => m.id === this.musicaAtual?.id);
+    if (indice !== -1 && indice < listaMusicas.length - 1) {
+      this.tocarMusica(listaMusicas[indice + 1], null, indice + 1);
     }
   }
 
   musicaAnterior(listaMusicas) {
-    if (this.playlistAtual) {
-      if (this.indiceAtual > 0) {
-        this.indiceAtual--;
-        this.tocarMusica(
-          this.playlistAtual[this.indiceAtual],
-          this.playlistAtual,
-          this.indiceAtual,
-        );
-      }
-    } else {
-      const indice = listaMusicas.findIndex(
-        (m) => m.id === this.musicaAtual?.id,
-      );
-      if (indice > 0) {
-        const musicaAnterior = listaMusicas[indice - 1];
-        this.tocarMusica(musicaAnterior, null, indice - 1);
-      }
+    const indice = listaMusicas.findIndex((m) => m.id === this.musicaAtual?.id);
+    if (indice > 0) {
+      this.tocarMusica(listaMusicas[indice - 1], null, indice - 1);
     }
   }
 

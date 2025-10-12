@@ -7,6 +7,7 @@ public class MusicaDTO {
     private String titulo;
     private Long duracao;
     private ArtistaDTO artista;
+    private AlbumDTO album;
 
     public UUID getId() {
         return id;
@@ -39,4 +40,13 @@ public class MusicaDTO {
     public void setArtista(ArtistaDTO artista) {
         this.artista = artista;
     }
+
+    public AlbumDTO getAlbum() {
+        return album;
+    }
+
+    public void setAlbum(AlbumDTO album) {
+        this.album = album;
+    }
+
 }

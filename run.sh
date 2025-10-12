@@ -2,8 +2,10 @@
 
 export AWS_ACCESS_KEY_ID="AWS_ACCESS_KEY_ID"
 export AWS_SECRET_ACCESS_KEY="AWS_SECRET_ACCESS_KEY"
-export DB_USERNAME="unimusic"
-export DB_PASSWORD="Nsg2*J3O5CfU"
+export DB_URL="DB_URL"
+export DB_USERNAME="DB_USERNAME"
+export DB_PASSWORD="DB_PASSWORD"
+export S3_BUCKET_NAME="S3_BUCKET_NAME"
 
 cd unimusic-server
 mvn clean install -DskipTests

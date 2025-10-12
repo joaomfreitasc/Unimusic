@@ -18,7 +18,6 @@ public class Album {
     private String titulo;
 
     private String dataDeLancamento;
-    private String capaUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "artista_id", nullable = false)
@@ -51,14 +50,6 @@ public class Album {
 
     public void setDataDeLancamento(String dataDeLancamento) {
         this.dataDeLancamento = dataDeLancamento;
-    }
-
-    public String getCapaUrl() {
-        return capaUrl;
-    }
-
-    public void setCapaUrl(String capaUrl) {
-        this.capaUrl = capaUrl;
     }
 
     public Artista getArtista() {

@@ -8,11 +8,22 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.web.bind.annotation.RequestParam;
+import java.io.File;
+
 @Service
 public class MusicaService {
 
     @Autowired
     private MusicaRepository musicaRepository;
+
+    @Autowired
+    private S3FileService s3FileService;
+
+    @Value("${aws.s3_bucket_name}")
+    private String srBucketName;
 
     public List<Musica> findAll() {
         return musicaRepository.findAll();
@@ -50,4 +61,7 @@ public class MusicaService {
         return true;
     }
 
+    public InputStreamResource streamFile(String key) {
+        return s3FileService.streamFile(srBucketName, key);
+    }   
 }

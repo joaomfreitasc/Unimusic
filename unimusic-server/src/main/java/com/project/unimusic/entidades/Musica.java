@@ -16,13 +16,13 @@ public class Musica {
 
     private long duracao;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "artista_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "artista_id", nullable = false)
     @com.fasterxml.jackson.annotation.JsonBackReference
     private Artista artista;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "album_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "album_id", nullable = false)
     @com.fasterxml.jackson.annotation.JsonBackReference
     private Album album;
 

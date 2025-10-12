@@ -4,12 +4,13 @@ services:
       context: ./unimusic-server
     ports:
       - "8080:8080"
-    # environment:
-    #   SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/DB_UNIMUSIC
-    #   SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
-    #   SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-    #   AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-    #   AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    environment:
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      SPRING_DATASOURCE_URL: ${DB_URL}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
     networks:
       - internal_network
 
@@ -19,9 +20,9 @@ services:
   #   ports:
   #     - "8081:8080"
   #   environment:
-  #     DYNAMODB_TABLE_NAME: Playlists
   #     AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
   #     AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+  #     DYNAMODB_TABLE_NAME: Playlists
   #   networks:
   #     - internal_network
 
@@ -35,6 +36,7 @@ services:
 
 volumes:
   pgdata:
+
 
 networks:
   internal_network:

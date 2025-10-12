@@ -299,12 +299,7 @@ function atualizarInfoPlayer(musica) {
   const tituloAlbum = album?.titulo || "Álbum Desconhecido";
   const dataLancamento = formatarData(album?.dataDeLancamento);
 
-  // Se capaUrl não tiver http, adiciona a URL base do servidor
-  let urlCapa =
-    album?.capaUrl || "https://via.placeholder.com/400x400?text=UniMusic";
-  if (urlCapa && !urlCapa.startsWith("http")) {
-    urlCapa = "http://localhost:8080/" + urlCapa;
-  }
+
 
   const infoSong = document.getElementById("info-song");
   const infoArtist = document.getElementById("info-artist");
@@ -316,13 +311,6 @@ function atualizarInfoPlayer(musica) {
   if (infoArtist)
     infoArtist.textContent = musica.artista?.nome || "Artista Desconhecido";
 
-  if (capaAlbum) {
-    capaAlbum.src = urlCapa;
-    // Se a capa falhar em carregar, usa o placeholder
-    capaAlbum.onerror = function () {
-      this.src = "https://via.placeholder.com/400x400?text=UniMusic";
-    };
-  }
 
   if (infoAlbum) infoAlbum.textContent = tituloAlbum;
   if (infoRelease) infoRelease.textContent = dataLancamento;

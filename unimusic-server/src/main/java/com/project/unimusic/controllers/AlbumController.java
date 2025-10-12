@@ -3,6 +3,8 @@ package com.project.unimusic.controllers;
 import com.project.unimusic.dto.AlbumDTO;
 import com.project.unimusic.entidades.Album;
 import com.project.unimusic.services.AlbumService;
+import com.project.unimusic.entidades.Artista;
+import com.project.unimusic.services.ArtistaService;
 
 import jakarta.validation.Valid;
 
@@ -24,6 +26,9 @@ public class AlbumController {
 
     @Autowired
     private AlbumService albumService;
+
+    @Autowired
+    private ArtistaService artistaService;
 
     @GetMapping
     public ResponseEntity<List<Album>> getAllAlbums() {
@@ -48,8 +53,16 @@ public class AlbumController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Dados inválidos");
         }
 
+        Optional<Artista> artistaOpt = artistaService.findById(albumDTO.getArtistaId());
+
+        if (artistaOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Artista não encontrado com o ID fornecido.");
+        }
+
         Album album = new Album();
         BeanUtils.copyProperties(albumDTO, album);
+
+        album.setArtista(artistaOpt.get());
 
         Album albumSalvo = albumService.save(album);
         return ResponseEntity.status(HttpStatus.CREATED).body(albumSalvo);
@@ -68,7 +81,6 @@ public class AlbumController {
         Album albumDetails = albumOpt.get();
         albumDetails.setTitulo(albumDTO.getTitulo());
         albumDetails.setDataDeLancamento(albumDTO.getDataDeLancamento());
-        albumDetails.setCapaUrl(albumDTO.getCapaUrl());
 
         Optional<Album> updatedAlbumOpt = albumService.update(id, albumDetails);
         if (updatedAlbumOpt.isEmpty()) {
