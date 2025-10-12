@@ -30,10 +30,7 @@ UniMusic é um aplicativo de música desenvolvido com **Java**, **HTML**, **CSS*
 ## Pendências:
 
 1º Microserviço:
-* Incluir musicas no s3; -Sergio
 * Testes; -Marcos
-* Conectar com o Postgress; -Sergio
-
 
 2º Microserviço:
 * Playlist; -Gustavo Júnio
@@ -41,7 +38,6 @@ UniMusic é um aplicativo de música desenvolvido com **Java**, **HTML**, **CSS*
 * Conectar com o DynamoDB; -Gustavo Júnio
 * Implementar playlist no front (garantir resposividade); -Gustavo Fonseca 
 
-
 3º Aplicativo em java; 
-4º Docker; -Sergio
+
 5º Migrar para a aws; -Sergio
