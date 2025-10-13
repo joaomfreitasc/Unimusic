@@ -14,6 +14,8 @@ UniMusic é um aplicativo de música desenvolvido com **Java**, **HTML**, **CSS*
 | ------------------- | --------------------------------- |
 | **Frontend**        | HTML, CSS, JavaScript             |
 | **Backend**         | Java Spring Boot                  |
+| **Banco de Dados**  | PostgreSQL, DynamoDB              |
+| **Storage**         | AWS S3                            |
 
 ## Screenshots
 
