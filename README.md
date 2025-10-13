@@ -15,11 +15,6 @@ UniMusic é um aplicativo de música desenvolvido com **Java**, **HTML**, **CSS*
 | **Frontend**        | HTML, CSS, JavaScript             |
 | **Backend**         | Java Spring Boot                  |
 
-
-## 🧠 Diagrama do Sistema
-
-![Diagrama](diagrama.png)
-
 ## Screenshots
 
 ![login](https://github.com/user-attachments/assets/2c48af4e-8902-4357-869e-617a4dc2b78f)
