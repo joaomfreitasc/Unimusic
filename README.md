@@ -37,7 +37,7 @@ UniMusic é um aplicativo de música desenvolvido com **Java**, **HTML**, **CSS*
 * Playlist; -Gustavo Júnio
 * Testes; -Marcos
 * Conectar com o DynamoDB; -Gustavo Júnio
-* Implementar playlist no front (garantir resposividade); -Gustavo Fonseca 
+* Implementar playlist no front (garantir resposividade); -Gustavo Fonseca e Henrique
 
 3º Aplicativo em java; 
 
