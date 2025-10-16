@@ -31,10 +31,10 @@ UniMusic é um aplicativo de música desenvolvido com **Java**, **HTML**, **CSS*
 ## Pendências:
 
 1º Microserviço:
-* Testes; -Marcos
+* Testes; - João Marcos
 
 2º Microserviço:
-* Testes; -Marcos
+* Testes; - João Marcos
 * Implementar playlist no front (garantir resposividade); -Gustavo Fonseca e Henrique
 * Homepage - Fabricio
 
