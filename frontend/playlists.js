@@ -126,39 +126,38 @@ async function carregarMusicas() {
   }
 }
 
-// Carregar playlists do localStorage
-function carregarPlaylists() {
-  const saved = localStorage.getItem("playlists");
-  playlists = saved ? JSON.parse(saved) : {};
+async function carregarPlaylists() {
+  try {
+    const res = await fetch("http://localhost:8081/playlist-api/playlist");
+    if (!res.ok) throw new Error(res.statusText);
+    playlists = await res.json();
+  } catch (err) {
+    console.error("Erro ao buscar playlists:", err);
+  }
   renderizarPlaylists();
-}
-
-// Salvar playlists no localStorage
-function salvarPlaylists() {
-  localStorage.setItem("playlists", JSON.stringify(playlists));
 }
 
 // Renderizar todas as playlists
 function renderizarPlaylists() {
   playlistsContainer.innerHTML = "";
 
-  if (Object.keys(playlists).length === 0) {
+  if (playlists.length === 0) {
     playlistsContainer.innerHTML =
       "<p style='text-align: center; color: var(--text-secondary);'>Nenhuma playlist criada</p>";
     return;
   }
 
-  Object.keys(playlists).forEach((nome) => {
+  playlists.forEach((playlist) => {
     const playlistDiv = document.createElement("div");
     playlistDiv.className = "playlist";
 
     const titulo = document.createElement("h3");
-    titulo.textContent = nome;
+    titulo.textContent = playlist.nome;
     titulo.style.marginBottom = "1rem";
 
     const botaoPlayPlaylist = document.createElement("button");
     botaoPlayPlaylist.textContent = "▶ Tocar Playlist";
-    botaoPlayPlaylist.onclick = () => tocarPlaylist(nome);
+    botaoPlayPlaylist.onclick = () => tocarPlaylist(playlist.nome);
     botaoPlayPlaylist.style.cssText =
       "margin-bottom: 1rem; padding: 0.6rem 1rem; background-color: var(--accent); border: none; border-radius: 6px; cursor: pointer; color: var(--bg-primary); font-weight: 600; width: 100%;";
     botaoPlayPlaylist.onmouseover = () =>
@@ -166,39 +165,23 @@ function renderizarPlaylists() {
     botaoPlayPlaylist.onmouseout = () =>
       (botaoPlayPlaylist.style.backgroundColor = "var(--accent)");
 
-    const musicas = playlists[nome];
     const listaMusicas = document.createElement("ul");
     listaMusicas.className = "track-list";
 
-    if (musicas.length === 0) {
-      const item = document.createElement("li");
-      item.textContent = "Nenhuma música adicionada";
-      item.style.color = "var(--text-secondary)";
-      listaMusicas.appendChild(item);
-    } else {
-      musicas.forEach((musica, index) => {
-        const item = document.createElement("li");
-        item.className = "track-item";
-        item.innerHTML = `
-                    <span class="track-title">${musica.titulo}</span>
-                    <span class="track-artist">${musica.artista?.nome || "Artista desconhecido"}</span>
-                    <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
-                        <button onclick="removerMusicaPlaylist('${nome}', ${index})" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background-color: #E53E3E; color: white; border: none; border-radius: 4px; cursor: pointer;">Remover</button>
-                    </div>
-                `;
-        listaMusicas.appendChild(item);
-      });
+    if (playlist.vetor_musica != null) {
+      const musicas = playlist.vetor_musica;
+      renderizarMusicas(musicas)
     }
 
     const botaoAdicionar = document.createElement("button");
     botaoAdicionar.textContent = "+ Adicionar música";
-    botaoAdicionar.onclick = () => abrirModalAdicionarMusica(nome);
+    botaoAdicionar.onclick = () => abrirModalAdicionarMusica(playlist.nome);
     botaoAdicionar.style.cssText =
       "margin-top: 1rem; padding: 0.6rem 1rem; background-color: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; color: var(--text-primary); font-weight: 500; width: 100%;";
 
     const botaoRemover = document.createElement("button");
     botaoRemover.textContent = "🗑️ Deletar playlist";
-    botaoRemover.onclick = () => removerPlaylist(nome);
+    botaoRemover.onclick = () => removerPlaylist(playlist.nome, playlist.id_playlist);
     botaoRemover.style.cssText =
       "margin-top: 0.5rem; padding: 0.6rem 1rem; background-color: #E53E3E; border: none; border-radius: 6px; cursor: pointer; color: white; font-weight: 500;";
 
@@ -209,6 +192,21 @@ function renderizarPlaylists() {
     playlistDiv.appendChild(botaoRemover);
 
     playlistsContainer.appendChild(playlistDiv);
+  });
+}
+
+function renderizarMusicas(musicas) {
+  musicas.forEach((musica, index) => {
+    const item = document.createElement("li");
+    item.className = "track-item";
+    item.innerHTML = `
+                <span class="track-title">${musica.titulo}</span>
+                <span class="track-artist">${musica.artistaNome || "Artista desconhecido"}</span>
+                <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+                    <button onclick="removerMusicaPlaylist('${playlist.nome}', ${index})" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background-color: #E53E3E; color: white; border: none; border-radius: 4px; cursor: pointer;">Remover</button>
+                </div>
+            `;
+    listaMusicas.appendChild(item);
   });
 }
 
@@ -284,11 +282,22 @@ function removerMusicaPlaylist(nomePlaylist, index) {
   renderizarPlaylists();
 }
 
+async function deletarPlaylist(id) {
+  try {
+    const res = await fetch("http://localhost:8081/playlist-api/playlist/" + id, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error(res.statusText);
+  } catch (err) {
+    console.error("Erro ao deletar playlist:", err);
+  }
+}
+
 // Remover playlist inteira
-function removerPlaylist(nome) {
+function removerPlaylist(nome, id) {
   if (confirm(`Tem certeza que deseja deletar a playlist "${nome}"?`)) {
-    delete playlists[nome];
-    salvarPlaylists();
+    deletarPlaylist(id);
     renderizarPlaylists();
   }
 }
@@ -298,8 +307,6 @@ function atualizarInfoPlayer(musica) {
   const album = musica.artista?.albums?.[0];
   const tituloAlbum = album?.titulo || "Álbum Desconhecido";
   const dataLancamento = formatarData(album?.dataDeLancamento);
-
-
 
   const infoSong = document.getElementById("info-song");
   const infoArtist = document.getElementById("info-artist");
@@ -390,6 +397,19 @@ function atualizarEstadoPlayer() {
   atualizarBotaoPlay();
 }
 
+async function salvarPlaylist(nomePlaylist) {
+  try {
+    const res = await fetch("http://localhost:8081/playlist-api/playlist", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome: nomePlaylist, usuarioId: localStorage.getItem("usuarioLogado").id })
+    });
+    if (!res.ok) throw new Error(res.statusText);
+  } catch (err) {
+    console.error("Erro ao registrar playlist:", err);
+  }
+}
+
 // Criar nova playlist
 createBtn.addEventListener("click", () => {
   const nome = playlistNameInput.value.trim();
@@ -399,13 +419,7 @@ createBtn.addEventListener("click", () => {
     return;
   }
 
-  if (playlists[nome]) {
-    alert("Playlist com este nome já existe");
-    return;
-  }
-
-  playlists[nome] = [];
-  salvarPlaylists();
+  salvarPlaylist(nome)
   renderizarPlaylists();
   playlistNameInput.value = "";
 });
