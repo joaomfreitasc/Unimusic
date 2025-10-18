@@ -7,6 +7,5 @@ export DB_USERNAME="DB_USERNAME"
 export DB_PASSWORD="DB_PASSWORD"
 export S3_BUCKET_NAME="S3_BUCKET_NAME"
 
-cd ..
 docker compose build
 docker compose up -d

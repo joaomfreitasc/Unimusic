@@ -1,146 +1,156 @@
 package br.unibh.sdm.unimusic_playlist.negocio;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
+import br.unibh.sdm.unimusic_playlist.entidades.MusicaPlaylist;
 import br.unibh.sdm.unimusic_playlist.entidades.Playlist;
-import br.unibh.sdm.unimusic_playlist.dto.MusicaDTO;
-import br.unibh.sdm.unimusic_playlist.dto.MusicaWrapperDTO;
-import br.unibh.sdm.unimusic_playlist.dto.PlaylistCreateDTO;
-import br.unibh.sdm.unimusic_playlist.dto.PlaylistDto;
-import br.unibh.sdm.unimusic_playlist.dto.PlaylistResponseDTO;
-import br.unibh.sdm.unimusic_playlist.dto.PlaylistUpdateDTO;
-import br.unibh.sdm.unimusic_playlist.persistencia.PlaylistRepository;
+import br.unibh.sdm.unimusic_playlist.dto.*;
 import br.unibh.sdm.unimusic_playlist.exceptions.NotFoundException;
+
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 
 @Service
 public class PlaylistService {
 
-    @Autowired
-    private PlaylistRepository playlistRepository;
+    private final DynamoDbTable<Playlist> playlistTable;
 
-    @Autowired
-    private RestTemplate restTemplate;
-
-    public PlaylistService(PlaylistRepository playlistRepository) {
-        this.playlistRepository = playlistRepository;
+    public PlaylistService(DynamoDbEnhancedClient enhancedClient) {
+        this.playlistTable = enhancedClient.table("playlists", TableSchema.fromBean(Playlist.class));
     }
 
-    public List<Playlist> getAllPlaylists() {
-        return (List<Playlist>) playlistRepository.findAll();
-    }
-    public PlaylistDto getId(String id) {
-        return playlistRepository.findById(id)
-            .map(this::toDTO).orElseThrow(() -> new NotFoundException("Playlist não encontrada!"));
-    }
-
-    public Playlist getPlaylistId(String id) {
-        return playlistRepository.findById(id).orElseThrow(() -> new NotFoundException("Playlist não encontrada!"));
+    public List<Playlist> obterTodasPlaylists() {
+        List<Playlist> playlists = new ArrayList<>();
+        playlistTable.scan().items().forEach(p -> {
+            if (p.getMusicas() == null) p.setMusicas(new ArrayList<>());
+            playlists.add(p);
+        });
+        return playlists;
     }
 
-    public List<PlaylistDto> getforUser(String usuarioId) {
-        List<Playlist> playlists = playlistRepository.findByUsuarioId(usuarioId);
-        return playlists.stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+    public PlaylistDetalheDTO obterPorId(String id) {
+        Playlist playlist = obterPlaylistPorId(id);
+        return paraDetalheDTO(playlist);
     }
 
-    public PlaylistDto create(PlaylistCreateDTO dto) {
+    public Playlist obterPlaylistPorId(String id) {
+        Playlist playlist = playlistTable.getItem(r -> r.key(k -> k.partitionValue(id)));
+        if (playlist == null) throw new NotFoundException("Playlist não encontrada!");
+        if (playlist.getMusicas() == null) playlist.setMusicas(new ArrayList<>());
+        return playlist;
+    }
+
+    public List<PlaylistDetalheDTO> obterParaUsuario(String usuarioId) {
+        List<PlaylistDetalheDTO> resultado = new ArrayList<>();
+        playlistTable.scan().items()
+                .forEach(p -> {
+                    if (usuarioId.equals(p.getUsuarioId())) {
+                        if (p.getMusicas() == null) p.setMusicas(new ArrayList<>());
+                        resultado.add(paraDetalheDTO(p));
+                    }
+                });
+        return resultado;
+    }
+
+    public PlaylistDetalheDTO criar(PlaylistCriarDTO dto) {
         Playlist playlist = new Playlist();
+        playlist.setId(UUID.randomUUID().toString());
         playlist.setNome(dto.getNome());
         playlist.setUsuarioId(dto.getUsuarioId());
-        playlist.setMusicasIds(dto.getMusicasIds());
+        if (dto.getMusicas() != null) {
+            playlist.setMusicas(dto.getMusicas().stream()
+                    .map(this::paraMusicaPlaylist)
+                    .collect(Collectors.toList()));
+        } else {
+            playlist.setMusicas(new ArrayList<>());
+        }
 
-        Playlist saved = playlistRepository.save(playlist);
-        return toDTO(saved);
+        playlistTable.putItem(playlist);
+        return paraDetalheDTO(playlist);
     }
 
-    public void addMusica(String playlistId, String musicaId) {
-        Playlist playlist = playlistRepository.findById(playlistId)
-            .orElseThrow(() -> new NotFoundException("Playlist não encontrada"));
-        
-        if (!playlist.getMusicasIds().contains(musicaId)) {
-            playlist.getMusicasIds().add(musicaId);
-            playlistRepository.save(playlist);
+    public void adicionarMusica(String playlistId, String musicaId, String titulo, String artistaNome) {
+        Playlist playlist = obterPlaylistPorId(playlistId);
+
+        if (playlist.getMusicas() == null) playlist.setMusicas(new ArrayList<>());
+
+        boolean existe = playlist.getMusicas().stream().anyMatch(m -> m.getId().equals(musicaId));
+        if (!existe) {
+            playlist.getMusicas().add(new MusicaPlaylist(musicaId, titulo, artistaNome));
+            playlistTable.putItem(playlist);
         }
     }
 
-    public Playlist update(String id, PlaylistUpdateDTO dto) {
-        Playlist playlist = playlistRepository.findById(id)
-            .orElseThrow(() -> new NotFoundException("Playlist não encontrada!"));;;
-
-        if(dto.getNome() != null) {
-            playlist.setNome(dto.getNome());
-        }
-        Playlist saved = playlistRepository.save(playlist);
-        return saved;
+    public Playlist atualizar(String id, PlaylistAtualizarDTO dto) {
+        Playlist playlist = obterPlaylistPorId(id);
+        if (dto.getNome() != null) playlist.setNome(dto.getNome());
+        playlistTable.putItem(playlist);
+        return playlist;
     }
 
-    public void removeMusic(String playlistId, String musicaId) {
-        Playlist playlist = playlistRepository.findById(playlistId)
-            .orElseThrow(() -> new NotFoundException("Playlist não encontrada"));
-
-        if (playlist.getMusicasIds().contains(musicaId)) {
-            playlist.getMusicasIds().remove(musicaId);
-            playlistRepository.save(playlist);
+    public void removerMusica(String playlistId, String musicaId) {
+        Playlist playlist = obterPlaylistPorId(playlistId);
+        if (playlist.getMusicas() != null) {
+            boolean removida = playlist.getMusicas().removeIf(m -> m.getId().equals(musicaId));
+            if (removida) playlistTable.putItem(playlist);
         }
     }
 
-    public void delete(String id) {
-        playlistRepository.findById(id)
-            .orElseThrow(() -> new NotFoundException("Playlist não encontrada!"));
-        playlistRepository.deleteById(id);
+    public void deletar(String id) {
+        obterPlaylistPorId(id);
+        playlistTable.deleteItem(r -> r.key(k -> k.partitionValue(id)));
     }
 
-    private PlaylistDto toDTO(Playlist playlist) {
-        PlaylistDto dto = new PlaylistDto();
+    public PlaylistDetalheDTO paraDetalheDTO(Playlist playlist) {
+        PlaylistDetalheDTO dto = new PlaylistDetalheDTO();
         dto.setId(playlist.getId());
         dto.setNome(playlist.getNome());
         dto.setUsuarioId(playlist.getUsuarioId());
-        dto.setMusicasIds(playlist.getMusicasIds());
+        if (playlist.getMusicas() != null) {
+            dto.setMusicas(playlist.getMusicas().stream()
+                    .map(this::paraMusicaDetalheDTO)
+                    .collect(Collectors.toList()));
+        } else {
+            dto.setMusicas(new ArrayList<>());
+        }
         return dto;
     }
 
-    public MusicaDTO searchMusicForId(UUID musicaId) {
-        try {
-            String url = "http://localhost:8080/musicas/" + musicaId;
-            MusicaWrapperDTO wrapper = restTemplate.getForObject(url, MusicaWrapperDTO.class);
-            if (wrapper != null && wrapper.getMusicaDTO() != null) {
-                MusicaWrapperDTO.MusicaInterna m = wrapper.getMusicaDTO();
-                MusicaDTO dto = new MusicaDTO();
-                dto.setId(m.getId());
-                dto.setTitulo(m.getTitulo());
-                dto.setArtistaNome(m.getArtista() != null ? m.getArtista().getNome() : null);
-                return dto;
-            }
-            return null;
-        } catch (Exception e) {
-            System.out.println("Erro ao buscar música " + musicaId + ": " + e.getMessage());
-            return null;
-            }
+    public PlaylistRespostaDTO paraRespostaDTO(Playlist playlist) {
+        PlaylistRespostaDTO dto = new PlaylistRespostaDTO();
+        dto.setIdPlaylist(playlist.getId());
+        dto.setIdUsuario(playlist.getUsuarioId());
+        dto.setNome(playlist.getNome());
+        if (playlist.getMusicas() != null) {
+            dto.setMusicas(playlist.getMusicas().stream()
+                    .map(this::paraMusicaDetalheDTO)
+                    .collect(Collectors.toList()));
+        } else {
+            dto.setMusicas(new ArrayList<>());
+        }
+        return dto;
     }
 
-    public PlaylistResponseDTO return_music(Playlist playlist) {
-        PlaylistResponseDTO response = new PlaylistResponseDTO();
-        response.setId_playlist(playlist.getId());
-        response.setId_user(playlist.getUsuarioId());
-        response.setNome(playlist.getNome());
-
-        List<MusicaDTO> musicas = playlist.getMusicasIds().stream()
-                .map(UUID::fromString)
-                .map(this::searchMusicForId)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-
-        response.setVetor_musica(musicas);
-        return response;
+    public MusicaDetalheDTO paraMusicaDetalheDTO(MusicaPlaylist musica) {
+        MusicaDetalheDTO dto = new MusicaDetalheDTO();
+        dto.setId(musica.getId());
+        dto.setTitulo(musica.getTitulo());
+        dto.setArtistaNome(musica.getArtistaNome());
+        return dto;
     }
 
+    public MusicaPlaylist paraMusicaPlaylist(MusicaDetalheDTO dto) {
+        MusicaPlaylist musica = new MusicaPlaylist();
+        musica.setId(dto.getId());
+        musica.setTitulo(dto.getTitulo());
+        musica.setArtistaNome(dto.getArtistaNome());
+        return musica;
+    }
 }

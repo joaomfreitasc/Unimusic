@@ -20,40 +20,6 @@ const elementos = {
 
 let listaMusicas = [];
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const usuarioLogado = localStorage.getItem("usuarioLogado");
-  if (!usuarioLogado) window.location.href = "login.html";
-
-  const estadoSalvo = playerGlobal.restaurarEstado();
-  if (estadoSalvo?.musicaAtual) {
-    atualizarInfoMusica(estadoSalvo.musicaAtual);
-    document.querySelector(".music-player").style.display = "flex";
-    if (elementos.volumeSlider) {
-      elementos.volumeSlider.value = estadoSalvo.volume || 1;
-      atualizarRastroSlider(elementos.volumeSlider);
-    }
-    atualizarEstadoPlayer();
-  }
-
-  await playerGlobal.restaurarSessao();
-  await buscarMusicas();
-  configurarControlesPlayer();
-
-  window.addEventListener("estadoPlayerRestaurado", () => {
-    const info = playerGlobal.obterInfo();
-    if (info.musicaAtual) {
-      atualizarInfoMusica(info.musicaAtual);
-      atualizarEstadoPlayer();
-    }
-  });
-
-  window.addEventListener("musicaAlterada", (e) => {
-    const { musica } = e.detail;
-    atualizarInfoMusica(musica);
-    atualizarEstadoPlayer();
-});
-});
-
 async function fetchConfig() {
   const response = await fetch('config.json');
   return response.json();
@@ -78,67 +44,6 @@ function atualizarRastroSlider(slider) {
   slider.style.background = `linear-gradient(to right, var(--accent) 0%, var(--accent) ${value}%, var(--border-color) ${value}%, var(--border-color) 100%)`;
 }
 
-async function buscarMusicas() {
-  try {
-    const config = await fetchConfig();
-    const res = await fetch(`${config.API_URL}/musicas`);
-    if (!res.ok) throw new Error(res.statusText);
-
-    let data = await res.json();
-    listaMusicas = data.map(m => m.musicaDTO || m);
-    elementos.filaDesktop.innerHTML = "";
-    atualizarRastroSlider(elementos.volumeSlider);
-
-    if (!playerGlobal.musicaAtual && listaMusicas.length > 0) {
-      atualizarInfoMusica(listaMusicas[0]);
-      document.querySelector(".music-player").style.display = "flex";
-    } else if (listaMusicas.length === 0) {
-      document.querySelector(".music-player").style.display = "none";
-    }
-
-    listaMusicas.forEach((musica, indice) => {
-      const li = document.createElement("li");
-      li.className = `track-item ${playerGlobal.musicaAtual?.id === musica.id ? "active" : ""}`;
-      li.innerHTML = `
-        <span class="track-title">${musica.titulo}</span>
-        <span class="track-artist">${musica.artista?.nome}</span>
-      `;
-      li.onclick = () => {
-        if (playerGlobal.audio) {
-            playerGlobal.audio.currentTime = 0;
-        }
-        
-        playerGlobal.tocarMusica(musica, null, indice);
-        atualizarInfoMusica(musica);
-        atualizarFila();
-        atualizarEstadoPlayer();
-      };
-      elementos.filaDesktop.appendChild(li);
-    });
-  } catch (err) {
-    console.error("Erro ao buscar músicas:", err);
-  }
-}
-
-async function atualizarInfoMusica(musica) {
-  if (!musica) return;
-
-  const album = musica.album;
-  const artista = musica.artista;
-  const tituloMusica = musica.titulo || "Título Desconhecido";
-  const tituloAlbum = album?.titulo || "Álbum Desconhecido";
-  const nomeArtista = artista?.nome || "Artista Desconhecido";
-  const dataLancamento = formatarData(album?.dataDeLancamento);
-  const urlCapa = await getCapaAlbum(musica);
-
-  elementos.infoMusica.textContent = tituloMusica;
-  elementos.infoArtista.textContent = nomeArtista;
-  elementos.infoAlbum.textContent = tituloAlbum;
-  elementos.infoDataLancamento.textContent = dataLancamento;
-  elementos.capaAlbum.src = urlCapa;
-  atualizarFila();
-}
-
 async function getCapaAlbum(musica) {
   try {
     const artista = encodeURIComponent(musica.artista?.nome || "Desconhecido");
@@ -161,13 +66,72 @@ async function getCapaAlbum(musica) {
 
   } catch (err) {
     console.error("Erro ao obter capa do álbum:", err);
+    return;
   }
+}
+
+async function atualizarInfoMusica(musica) {
+  if (!musica) return;
+
+  const album = musica.album;
+  const artista = musica.artista;
+  const tituloMusica = musica.titulo || "Título Desconhecido";
+  const tituloAlbum = album?.titulo || "Álbum Desconhecido";
+  const nomeArtista = artista?.nome || "Artista Desconhecido";
+  const dataLancamento = formatarData(album?.dataDeLancamento);
+  const urlCapa = await getCapaAlbum(musica);
+
+  elementos.infoMusica.textContent = tituloMusica;
+  elementos.infoArtista.textContent = nomeArtista;
+  elementos.infoAlbum.textContent = tituloAlbum;
+  elementos.infoDataLancamento.textContent = dataLancamento;
+  if (urlCapa) {
+    elementos.capaAlbum.src = urlCapa;
+  }
+  atualizarFila();
 }
 
 function atualizarFila() {
   document.querySelectorAll(".track-item").forEach((item, index) => {
     item.classList.toggle("active", playerGlobal.musicaAtual?.id === listaMusicas[index]?.id);
   });
+}
+
+function atualizarBotaoPlay() {
+  const playPath = "M7.5 5.625v12.75a.75.75 0 001.14.643l10.5-6.375a.75.75 0 000-1.286L8.64 4.982A.75.75 0 007.5 5.625z";
+  const pausePath = "M6 6.75A.75.75 0 016.75 6h.75a.75.75 0 01.75.75v10.5a.75.75 0 01-.75.75h-.75a.75.75 0 01-.75-.75V6.75zM15.75 6a.75.75 0 00-.75.75v10.5a.75.75 0 00.75.75h.75a.75.75 0 00.75-.75V6.75a.75.75 0 00-.75-.75h-.75z";
+  const pathElement = elementos.playPauseIcon.querySelector("path");
+  if (!pathElement) return;
+
+  if (playerGlobal.estaTocando) {
+    pathElement.setAttribute("d", pausePath);
+    elementos.playPauseIcon.style.transform = "none";
+  } else {
+    pathElement.setAttribute("d", playPath);
+    elementos.playPauseIcon.style.transform = "translateX(2px)";
+  }
+}
+
+function atualizarEstadoPlayer() {
+  atualizarBotaoPlay();
+  atualizarFila();
+}
+
+function alternarPlay() {
+  if (!playerGlobal.audio.src && listaMusicas.length > 0) {
+    playerGlobal.tocarMusica(listaMusicas[0], null, 0);
+    return;
+  }
+  playerGlobal.alternarPlay();
+  atualizarEstadoPlayer();
+}
+
+function tocarProxima() {
+  playerGlobal.proximaMusica(listaMusicas);
+}
+
+function tocarAnterior() {
+  playerGlobal.musicaAnterior(listaMusicas);
 }
 
 function configurarControlesPlayer() {
@@ -185,6 +149,7 @@ function configurarControlesPlayer() {
   if (elementos.alternarModoEscuro) {
     elementos.alternarModoEscuro.onclick = () => {
       document.body.classList.toggle("dark-mode");
+      localStorage.setItem("darkMode", document.body.classList.contains("dark-mode") ? "enabled" : "disabled");
     };
   }
 
@@ -216,39 +181,75 @@ function configurarControlesPlayer() {
   }
 }
 
-function alternarPlay() {
-  if (!playerGlobal.audio.src && listaMusicas.length > 0) {
-    playerGlobal.tocarMusica(listaMusicas[0], null, 0);
-    return;
+async function buscarMusicas() {
+  try {
+    const config = await fetchConfig();
+    const res = await fetch(`${config.API_URL}/musicas`);
+    if (!res.ok) throw new Error(res.statusText);
+
+    let data = await res.json();
+    listaMusicas = data.map(m => m.musicaDTO || m);
+    elementos.filaDesktop.innerHTML = "";
+    atualizarRastroSlider(elementos.volumeSlider);
+
+    if (!playerGlobal.musicaAtual && listaMusicas.length > 0) {
+      atualizarInfoMusica(listaMusicas[0]);
+      document.querySelector(".music-player").style.display = "flex";
+    } else if (listaMusicas.length === 0) {
+      document.querySelector(".music-player").style.display = "none";
+    }
+
+    if (playerGlobal.musicaAtual) {
+        atualizarFila();
+    }
+    
+    listaMusicas.forEach((musica, indice) => {
+      const li = document.createElement("li");
+      li.className = `track-item ${playerGlobal.musicaAtual?.id === musica.id ? "active" : ""}`;
+      li.innerHTML = `
+        <span class="track-title">${musica.titulo}</span>
+        <span class="track-artist">${musica.artista?.nome}</span>
+      `;
+      li.onclick = () => {        
+        playerGlobal.tocarMusica(musica, null, indice);
+      };
+      elementos.filaDesktop.appendChild(li);
+    });
+  } catch (err) {
+    console.error("Erro ao buscar músicas:", err);
   }
-  playerGlobal.alternarPlay();
-  atualizarEstadoPlayer();
 }
 
-function atualizarBotaoPlay() {
-  const playPath = "M7.5 5.625v12.75a.75.75 0 001.14.643l10.5-6.375a.75.75 0 000-1.286L8.64 4.982A.75.75 0 007.5 5.625z";
-  const pausePath = "M6 6.75A.75.75 0 016.75 6h.75a.75.75 0 01.75.75v10.5a.75.75 0 01-.75.75h-.75a.75.75 0 01-.75-.75V6.75zM15.75 6a.75.75 0 00-.75.75v10.5a.75.75 0 00.75.75h.75a.75.75 0 00.75-.75V6.75a.75.75 0 00-.75-.75h-.75z";
-  const pathElement = elementos.playPauseIcon.querySelector("path");
-  if (!pathElement) return;
+document.addEventListener("DOMContentLoaded", async () => {
+  const usuarioLogado = localStorage.getItem("usuarioLogado");
+  if (!usuarioLogado) window.location.href = "login.html";
 
-  if (playerGlobal.estaTocando) {
-    pathElement.setAttribute("d", pausePath);
-    elementos.playPauseIcon.style.transform = "none";
-  } else {
-    pathElement.setAttribute("d", playPath);
-    elementos.playPauseIcon.style.transform = "translateX(2px)";
+  const estadoSalvo = playerGlobal.restaurarEstado();
+  if (estadoSalvo?.musicaAtual) {
+    await atualizarInfoMusica(estadoSalvo.musicaAtual);
+    document.querySelector(".music-player").style.display = "flex";
+    if (elementos.volumeSlider) {
+      elementos.volumeSlider.value = estadoSalvo.volume || 1;
+      atualizarRastroSlider(elementos.volumeSlider);
+    }
+    atualizarEstadoPlayer();
   }
-}
 
-function atualizarEstadoPlayer() {
-  atualizarBotaoPlay();
-  atualizarFila();
-}
+  await playerGlobal.restaurarSessao();
+  await buscarMusicas();
+  configurarControlesPlayer();
 
-function tocarProxima() {
-  playerGlobal.proximaMusica(listaMusicas);
-}
+  window.addEventListener("estadoPlayerRestaurado", () => {
+    const info = playerGlobal.obterInfo();
+    if (info.musicaAtual) {
+      atualizarInfoMusica(info.musicaAtual);
+      atualizarEstadoPlayer();
+    }
+  });
 
-function tocarAnterior() {
-  playerGlobal.musicaAnterior(listaMusicas);
-}
+  window.addEventListener("musicaAlterada", (e) => {
+    const { musica } = e.detail;
+    atualizarInfoMusica(musica);
+    atualizarEstadoPlayer();
+});
+}); 

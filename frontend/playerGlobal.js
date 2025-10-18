@@ -137,6 +137,11 @@ class PlayerGlobal {
 
   async tocarMusica(musica, playlist = null, indice = 0) {
     try {
+      if (this.audio && this.audio.src) {
+        this.audio.pause();
+        this.audio.currentTime = 0;
+      }
+
       this.musicaAtual = musica;
       this.playlistAtual = playlist;
       this.indiceAtual = indice;
@@ -195,14 +200,14 @@ class PlayerGlobal {
   proximaMusica(listaMusicas) {
     const indice = listaMusicas.findIndex((m) => m.id === this.musicaAtual?.id);
     if (indice !== -1 && indice < listaMusicas.length - 1) {
-      this.tocarMusica(listaMusicas[indice + 1], null, indice + 1);
+      this.tocarMusica(listaMusicas[indice + 1], this.playlistAtual, indice + 1);
     }
   }
 
   musicaAnterior(listaMusicas) {
     const indice = listaMusicas.findIndex((m) => m.id === this.musicaAtual?.id);
     if (indice > 0) {
-      this.tocarMusica(listaMusicas[indice - 1], null, indice - 1);
+      this.tocarMusica(listaMusicas[indice - 1], this.playlistAtual, indice - 1);
     }
   }
 

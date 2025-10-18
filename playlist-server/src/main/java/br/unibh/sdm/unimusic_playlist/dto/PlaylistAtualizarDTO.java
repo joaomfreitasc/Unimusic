@@ -1,13 +1,7 @@
 package br.unibh.sdm.unimusic_playlist.dto;
 
-public class PlaylistUpdateDTO {
+public class PlaylistAtualizarDTO {
     private String nome;
-
-    public PlaylistUpdateDTO() {}
-
-    public PlaylistUpdateDTO(String nome) {
-        this.nome = nome;
-    }
 
     public String getNome() {
         return nome;
