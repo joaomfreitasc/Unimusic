@@ -11,7 +11,7 @@ public class Musica {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String titulo;
 
     private long duracao;

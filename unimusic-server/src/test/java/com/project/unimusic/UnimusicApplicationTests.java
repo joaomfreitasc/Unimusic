@@ -30,10 +30,10 @@ import com.project.unimusic.repositories.AlbumRepository;
 /**
  * Classe de testes para a entidade Musica com PostgreSQL.
  * <br>
- * Para rodar, configure a variável de ambiente: 
+ * Para rodar, configure a variavel de ambiente: 
  * -Dspring.config.location=C:/Users/SEU_USUARIO/projeto_sdm/unimusic-server/
  * <br>
- * @author João Marcos
+ * @author Joao Marcos
  */
 @SpringBootTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -73,7 +73,7 @@ public class UnimusicApplicationTests {
         
         assertNotNull(artista.getId(), "ID do artista nao deve ser nulo");
         artistaIdTeste = artista.getId();
-        LOGGER.info("✓ Artista criado com ID: {}", artista.getId());
+        LOGGER.info("Artista criado com ID: {}", artista.getId());
 
         // ============================================
         // PASSO 2: Criar Album
@@ -86,7 +86,7 @@ public class UnimusicApplicationTests {
         
         assertNotNull(album.getId(), "ID do album nao deve ser nulo");
         albumIdTeste = album.getId();
-        LOGGER.info("✓ Album criado com ID: {}", album.getId());
+        LOGGER.info("Album criado com ID: {}", album.getId());
 
         // ============================================
         // PASSO 3: Criar Musica 1 - Eduardo e Monica
@@ -101,7 +101,7 @@ public class UnimusicApplicationTests {
         
         assertNotNull(musica1.getId(), "ID da musica nao deve ser nulo");
         musicaIdTeste = musica1.getId();
-        LOGGER.info("✓ Musica criada com ID: {}", musica1.getId());
+        LOGGER.info("Musica criada com ID: {}", musica1.getId());
         LOGGER.info("  - Titulo: {}", musica1.getTitulo());
         LOGGER.info("  - Duracao: {}s", musica1.getDuracao());
         LOGGER.info("  - Artista: {}", musica1.getArtista().getNome());
@@ -118,7 +118,7 @@ public class UnimusicApplicationTests {
         musica2 = musicaRepository.save(musica2);
         
         assertNotNull(musica2.getId(), "ID da musica nao deve ser nulo");
-        LOGGER.info("✓ Musica criada com ID: {}", musica2.getId());
+        LOGGER.info("Musica criada com ID: {}", musica2.getId());
         LOGGER.info("  - Titulo: {}", musica2.getTitulo());
         LOGGER.info("  - Duracao: {}s", musica2.getDuracao());
 
@@ -134,7 +134,7 @@ public class UnimusicApplicationTests {
         musica3 = musicaRepository.save(musica3);
         
         assertNotNull(musica3.getId(), "ID da musica nao deve ser nulo");
-        LOGGER.info("✓ Musica criada com ID: {}", musica3.getId());
+        LOGGER.info("Musica criada com ID: {}", musica3.getId());
         LOGGER.info("  - Titulo: {}", musica3.getTitulo());
         LOGGER.info("  - Duracao: {}s", musica3.getDuracao());
 
@@ -161,7 +161,7 @@ public class UnimusicApplicationTests {
         }
 
         LOGGER.info("========================================");
-        LOGGER.info("✓ TESTE 1: CRIACAO - CONCLUIDO COM SUCESSO!");
+        LOGGER.info("TESTE 1: CRIACAO - CONCLUIDO COM SUCESSO!");
         LOGGER.info("========================================\n");
     }
 
@@ -188,7 +188,7 @@ public class UnimusicApplicationTests {
         assertTrue(musicaEncontrada.isPresent(), "Musica deve ser encontrada");
         
         Musica musica = musicaEncontrada.get();
-        LOGGER.info("✓ Musica encontrada:");
+        LOGGER.info("Musica encontrada:");
         LOGGER.info("  - ID: {}", musica.getId());
         LOGGER.info("  - Titulo: {}", musica.getTitulo());
         LOGGER.info("  - Artista: {}", musica.getArtista().getNome());
@@ -212,6 +212,7 @@ public class UnimusicApplicationTests {
         boolean encontrouEduardo = resultadoBusca.stream()
             .anyMatch(m -> m.getTitulo().contains("Eduardo e Monica"));
         assertTrue(encontrouEduardo, "Deve encontrar 'Eduardo e Monica'");
+
         // ============================================
         // PASSO 3: Buscar musicas de teste
         // ============================================
@@ -224,7 +225,7 @@ public class UnimusicApplicationTests {
         assertTrue(musicasTeste2.size() >= 3, "Deve ter pelo menos 3 musicas de teste");
 
         LOGGER.info("========================================");
-        LOGGER.info("✓ TESTE 2: CONSULTA - CONCLUIDO COM SUCESSO!");
+        LOGGER.info("TESTE 2: CONSULTA - CONCLUIDO COM SUCESSO!");
         LOGGER.info("========================================\n");
     }
 
@@ -244,7 +245,7 @@ public class UnimusicApplicationTests {
         assertTrue(musicas.size() > 0, "Musica deve existir");
         
         Musica musica = musicas.get(0);
-        LOGGER.info("✓ Musica encontrada:");
+        LOGGER.info("Musica encontrada:");
         LOGGER.info("  - ID: {}", musica.getId());
         LOGGER.info("  - Titulo ANTES: {}", musica.getTitulo());
         LOGGER.info("  - Duracao ANTES: {}s", musica.getDuracao());
@@ -262,10 +263,11 @@ public class UnimusicApplicationTests {
         musica.setDuracao(duracaoNova);
         Musica musicaAtualizada = musicaRepository.save(musica);
         
-        LOGGER.info("✓ Musica atualizada:");
+        LOGGER.info("Musica atualizada:");
         LOGGER.info("  - Duracao ANTES: {}s", duracaoAntiga);
         LOGGER.info("  - Duracao DEPOIS: {}s", musicaAtualizada.getDuracao());
-        assertEquals(duracaoNova, musicaAtualizada.getDuracao(), "Duracao deve estar atualizada");
+        
+        assertEquals(duracaoNova, musicaAtualizada.getDuracao(), "Duracao deve ser atualizada");
 
         // ============================================
         // PASSO 3: Verificar persistencia
@@ -279,10 +281,10 @@ public class UnimusicApplicationTests {
         assertEquals(duracaoNova, musicaVerificacao.get().getDuracao(),
             "Duracao deve estar atualizada no banco");
         
-        LOGGER.info("✓ Atualizacao persistida com sucesso no banco!");
+        LOGGER.info("Atualizacao persistida com sucesso no banco!");
 
         LOGGER.info("========================================");
-        LOGGER.info("✓ TESTE 3: ATUALIZACAO - CONCLUIDO COM SUCESSO!");
+        LOGGER.info("TESTE 3: ATUALIZACAO - CONCLUIDO COM SUCESSO!");
         LOGGER.info("========================================\n");
     }
 
@@ -317,7 +319,7 @@ public class UnimusicApplicationTests {
             contadorExclusoes++;
         }
         
-        LOGGER.info("✓ Total de musicas excluidas: {}", contadorExclusoes);
+        LOGGER.info("Total de musicas excluidas: {}", contadorExclusoes);
 
         // ============================================
         // PASSO 3: Verificar exclusao
@@ -358,15 +360,15 @@ public class UnimusicApplicationTests {
         }
 
         LOGGER.info("========================================");
-        LOGGER.info("✓ TESTE 4: EXCLUSAO - CONCLUIDO COM SUCESSO!");
+        LOGGER.info("TESTE 4: EXCLUSAO - CONCLUIDO COM SUCESSO!");
         LOGGER.info("========================================");
         LOGGER.info("");
-        LOGGER.info("╔════════════════════════════════════════╗");
-        LOGGER.info("║  TODOS OS TESTES FORAM EXECUTADOS!     ║");
-        LOGGER.info("║  ✓ Criacao                             ║");
-        LOGGER.info("║  ✓ Consulta                            ║");
-        LOGGER.info("║  ✓ Atualizacao                         ║");
-        LOGGER.info("║  ✓ Exclusao                            ║");
-        LOGGER.info("╚════════════════════════════════════════╝");
+        LOGGER.info("==========================================");
+        LOGGER.info("  TODOS OS TESTES FORAM EXECUTADOS!     ");
+        LOGGER.info("  - Criacao                             ");
+        LOGGER.info("  - Consulta                            ");
+        LOGGER.info("  - Atualizacao                         ");
+        LOGGER.info("  - Exclusao                            ");
+        LOGGER.info("==========================================");
     }
 }
