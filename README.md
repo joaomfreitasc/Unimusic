@@ -30,6 +30,5 @@ UniMusic é um aplicativo de música desenvolvido com **Java**, **HTML**, **CSS*
 
 ## Pendências:
 
-* Testes; - João Marcos
 * Aplicativo em Kotlin; 
 * Migrar para a aws;
