@@ -2,6 +2,14 @@
 
 UniMusic é um aplicativo de música desenvolvido com **Java**, **HTML**, **CSS** e **JavaScript**, que permite aos usuários fazer login, registro, visualizar e reproduzir músicas de forma intuitiva.
 
+# Integrantes
+* Fabrício Martins
+* Gustavo Fonseca de Oliveira
+* Gustavo Junio
+* Henrique Willer
+* João Marcos
+* Sérgio Brito
+
 ## Funcionalidades
 
 * 🔐 Sistema de login e registro de usuário
