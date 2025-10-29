@@ -7,9 +7,5 @@ export DB_USERNAME=""
 export DB_PASSWORD=""
 export S3_BUCKET_NAME=""
 
-cd unimusic-server
-mvn clean install -DskipTests
-
-cd ..
 docker compose build
 docker compose up -d

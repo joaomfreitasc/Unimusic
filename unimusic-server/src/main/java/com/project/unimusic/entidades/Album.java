@@ -19,7 +19,7 @@ public class Album {
 
     private String dataDeLancamento;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "artista_id", nullable = false)
     @JsonBackReference
     private Artista artista;

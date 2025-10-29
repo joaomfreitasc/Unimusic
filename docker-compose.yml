@@ -1,5 +1,5 @@
 services:
-  api:
+  unimusic-server:
     build:
       context: ./unimusic-server
     ports:
@@ -14,17 +14,16 @@ services:
     networks:
       - internal_network
 
-  # playlist-server:
-  #   build:
-  #     context: ./playlist-server
-  #   ports:
-  #     - "8081:8080"
-  #   environment:
-  #     AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-  #     AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-  #     DYNAMODB_TABLE_NAME: Playlists
-  #   networks:
-  #     - internal_network
+  playlist-server:
+    build:
+      context: ./playlist-server
+    ports:
+      - "8081:8080"
+    environment:
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    networks:
+      - internal_network
 
   frontend:
     build:
