@@ -108,6 +108,16 @@ public class MusicaController {
         return ResponseEntity.status(HttpStatus.OK).body(updateMusicaOpt.get());
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Object> deleteMusica(@PathVariable UUID id) {
+        Optional<Musica> musicaOpt = musicaService.findById(id);
+        if (musicaOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Musica não encontrada.");
+        }
+        musicaService.deleteById(id);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
     @GetMapping("/stream/{artista}/{album}/{musica}")
     public ResponseEntity<Resource> streamMusica(@PathVariable String artista, @PathVariable String album,
             @PathVariable String musica) {
