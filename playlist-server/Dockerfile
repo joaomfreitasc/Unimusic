@@ -4,7 +4,7 @@ COPY pom.xml .
 COPY src ./src
 RUN mvn clean install -DskipTests
 
-FROM openjdk:23
+FROM openjdk:17
 WORKDIR /app
 COPY --from=build /app/target/*.jar /app/app.jar
 EXPOSE 8081
