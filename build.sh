@@ -2,18 +2,18 @@
 
 set -e
 
-echo "--- Building unimusic-server FatJar---"
+echo "--- Criando unimusic-server FatJar---"
 cd unimusic-server
 mvn install -DskipTests
 cd ..
 
 echo ""
-echo "--- Building playlist-server FatJar---"
+echo "--- Criando playlist-server FatJar---"
 cd playlist-server
 mvn install -DskipTests
 cd ..
 
 echo ""
 echo "-------------------------------------"
-echo " Microservices criados com sucesso! -> Fat Jars criados"
+echo " Microservices Fat Jars criados!"
 echo "-------------------------------------"
