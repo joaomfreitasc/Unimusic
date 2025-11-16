@@ -122,7 +122,8 @@ async function adicionarMusicaAPlaylist(playlistId, musicaSelecionada) {
 
 async function carregarMusicas() {
   try {
-    const res = await fetch("http://localhost:8080/musicas");
+    const config = await fetchConfig(); 
+    const res = await fetch(`${config.API_URL}/musicas`);
     if (!res.ok) throw new Error(res.statusText);
     listaMusicas = await res.json();
   } catch (err) {
@@ -132,7 +133,8 @@ async function carregarMusicas() {
 
 async function getMusica(id) {
   try {
-    const res = await fetch("http://localhost:8080/musicas/" + id);
+    const config = await fetchConfig();
+    const res = await fetch(`${config.API_URL}/musicas/` + id);
     if (!res.ok) throw new Error(res.statusText);
     return await res.json();
   } catch (err) {
@@ -142,10 +144,11 @@ async function getMusica(id) {
 
 async function carregarPlaylists() {
   try {
+    const config = await fetchConfig();
     const usuarioLogadoString = localStorage.getItem("usuarioLogado");
     const usuarioLogado = usuarioLogadoString ? JSON.parse(usuarioLogadoString) : null;
     if (!usuarioLogado || !usuarioLogado.id) throw new Error("Usuário não logado ou ID de usuário ausente.");
-    const res = await fetch("http://localhost:8081/playlist-api/playlist/usuario/" + usuarioLogado.id);
+    const res = await fetch(`${config.API_PLAYLIST_URL}/playlist-api/playlist/usuario/` + usuarioLogado.id);
     if (!res.ok) throw new Error(res.statusText);
     listaPlaylists = await res.json();
   } catch (err) {
@@ -156,10 +159,11 @@ async function carregarPlaylists() {
 
 async function salvarPlaylist(nomePlaylist) {
   try {
+    const config = await fetchConfig();
     const usuarioLogadoString = localStorage.getItem("usuarioLogado");
     const usuarioLogado = usuarioLogadoString ? JSON.parse(usuarioLogadoString) : null;
     if (!usuarioLogado || !usuarioLogado.id) throw new Error("Usuário não logado ou ID de usuário ausente.");
-    const res = await fetch("http://localhost:8081/playlist-api/playlist", { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nome: nomePlaylist, usuarioId: usuarioLogado.id }) });
+    const res = await fetch(`${config.API_PLAYLIST_URL}/playlist-api/playlist`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nome: nomePlaylist, usuarioId: usuarioLogado.id }) });
     if (!res.ok) throw new Error(res.statusText);
     await carregarPlaylists();
   } catch (err) {
@@ -169,7 +173,8 @@ async function salvarPlaylist(nomePlaylist) {
 
 async function deletarPlaylist(id) {
   try {
-    const res = await fetch("http://localhost:8081/playlist-api/playlist/" + id, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
+    const config = await fetchConfig();
+    const res = await fetch(`${config.API_PLAYLIST_URL}/playlist-api/playlist/` + id, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
     if (!res.ok) throw new Error(res.statusText);
     await carregarPlaylists();
   } catch (err) {
