@@ -300,9 +300,17 @@ async function tocarPlaylist(nomePlaylist) {
   const playlist = listaPlaylists.find(p => p.nome === nomePlaylist);
   if (!playlist || !playlist.musicas || playlist.musicas.length === 0) { alert("Esta playlist está vazia"); return; }
   playlistAtualLista = playlist.musicas;
-  playerGlobal.tocarMusica(playlist.musicas[0], nomePlaylist, 0);
-  atualizarInfoPlayer(playlist.musicas[0]);
-  atualizarEstadoPlayer();
+  
+  try {
+    const musicaCompleta = await getMusica(playlist.musicas[0].id);
+
+    playerGlobal.tocarMusica(musicaCompleta.musicaDTO, nomePlaylist, 0);
+    atualizarInfoPlayer(musicaCompleta.musicaDTO);
+    atualizarEstadoPlayer();
+  } catch (err) {
+    console.error("Erro ao iniciar a playlist:", err);
+    alert("Erro ao tocar a playlist !");
+  }
 }
 
 async function tocarMusica(nomePlaylist, indice) {

@@ -3,3 +3,4 @@ target/
 *.class
 *.jar
 *.war
+run-docker.sh

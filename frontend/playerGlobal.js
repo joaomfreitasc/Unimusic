@@ -142,6 +142,22 @@ class PlayerGlobal {
         this.audio.currentTime = 0;
       }
 
+      const config = await fetchConfig();
+
+      if (!musica.album) {
+        try {
+          const res = await fetch(`${config.API_URL}/musicas/${musica.id}`);
+          if (res.ok) {
+            const data = await res.json();
+            musica = data.musicaDTO || data;
+          } else {
+            console.error("Não foi possível buscar detalhes da música.");
+          }
+        } catch (err) {
+          console.error("Erro de conexão ao buscar detalhes:", err);
+        }
+      }
+
       this.musicaAtual = musica;
       this.playlistAtual = playlist;
       this.indiceAtual = indice;
@@ -150,7 +166,6 @@ class PlayerGlobal {
       const album = encodeURIComponent(musica.album?.titulo || "Desconhecido");
       const titulo = encodeURIComponent(musica.titulo);
 
-      const config = await fetchConfig();
       const url = `${config.API_URL}/musicas/stream/${artista}/${album}/${titulo}`;
 
       const res = await fetch(url);
