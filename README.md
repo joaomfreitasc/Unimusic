@@ -14,7 +14,7 @@ UniMusic é um aplicativo de música desenvolvido com **Java**, **HTML**, **CSS*
 
 * 🔐 Sistema de login e registro de usuário
 * 🎧 Listagem e reprodução de músicas
-* 🎨 Interface responsiva para Desktop e Mobile (+ App Android)
+* 🎨 Interface responsiva para Desktop e Mobile (+ Android App)
 
 ## Tecnologias Utilizadas
 
