@@ -42,7 +42,6 @@ Testes no Postman atualizados: https://gufonseca-oliveira-6143653.postman.co/wor
 ## Screenshots Mobile App
 
 ![](https://github.com/user-attachments/assets/711901f0-73e7-46d4-b849-c5226d764869)
-![](https://github.com/user-attachments/assets/f4a3a829-8bdd-4ed1-a7b6-30c2dc40cf88)
 ![](https://github.com/user-attachments/assets/2f819e35-2f18-4789-b999-28eefce2c826)
 ![](https://github.com/user-attachments/assets/2f396199-5568-4915-bcfa-b9553a21da9b)
 ![](https://github.com/user-attachments/assets/564ee55f-9c5c-4372-9087-2980495a11d6)
